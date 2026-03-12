@@ -34,7 +34,7 @@ exports.registerVendor = async (req, res) => {
             password: hashedPassword,
             shopName,
             role: 'vendor',
-            isApproved: true 
+            isApproved: false 
         });
 
         await newVendor.save();
@@ -64,9 +64,9 @@ exports.login = async (req, res) => {
         }
 
         // Check if vendor is approved
-        if (user.role === 'vendor' && !user.isApproved) {
-            return res.render('auth/login', { error: 'Account pending admin approval' });
-        }
+        // if (user.role === 'vendor' && !user.isApproved) {
+        //     return res.render('auth/login', { error: 'Account pending admin approval' });
+        // }
 
         // Save user to session
         req.session.user = {

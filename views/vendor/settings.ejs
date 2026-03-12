@@ -39,34 +39,76 @@
         <h1 class="text-3xl font-bold mb-8">Shop Settings</h1>
 
         <div class="bg-[#121624] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-            <form action="/vendor/settings/update" method="POST" class="space-y-8">
+
+             <!-- Approval Status Banner -->
+            <% if(vendor.isApproved) { %>
+                <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl mb-6 flex items-center gap-3">
+                    <span class="text-xl">✅</span>
+                    <div>
+                        <p class="font-bold">Account Verified & Active</p>
+                        <p class="text-xs text-emerald-400/80">Your restaurant is live and can accept orders.</p>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 flex items-center gap-3">
+                    <span class="text-xl">⚠️</span>
+                    <div>
+                        <p class="font-bold">Account Pending Approval</p>
+                        <p class="text-xs text-red-400/80">Upload your Aadhar & PAN below. Customers cannot place orders until Admin approves your account.</p>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Add enctype for file uploads -->
+            <form action="/vendor/settings/update" method="POST" enctype="multipart/form-data" class="space-y-8">
                 
-                <!-- Restaurant Status Toggle -->
                 <div class="flex items-center justify-between border-b border-white/5 pb-6">
                     <div>
                         <h3 class="text-lg font-bold text-white">Accepting Orders</h3>
                         <p class="text-sm text-gray-400 mt-1">Turn off if your kitchen is overloaded or closed.</p>
                     </div>
-                    
                     <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="isOpen" id="toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-300" <%= vendor.isOpen ? 'checked' : '' %>/>
+                        <!-- Toggle is disabled visually if not approved -->
+                        <input type="checkbox" name="isOpen" id="toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-300" <%= vendor.isOpen ? 'checked' : '' %> <%= !vendor.isApproved ? 'disabled' : '' %>/>
                         <label for="toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer transition-colors duration-300"></label>
                     </div>
                 </div>
 
-                <!-- UPI ID Setup -->
                 <div>
                     <h3 class="text-lg font-bold text-white mb-2">Payment Details</h3>
-                    <p class="text-sm text-gray-400 mb-4">Enter your UPI ID to accept digital payments from customers.</p>
-                    
-                    <label class="block text-xs text-gray-400 mb-1">Business UPI ID</label>
                     <input type="text" name="upiId" value="<%= vendor.upiId %>" class="w-full bg-[#0B0E16] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 outline-none" placeholder="e.g. 9876543210@paytm">
                 </div>
 
+                <!-- KYC Document Uploads -->
+                <div class="border-t border-white/5 pt-6">
+                    <h3 class="text-lg font-bold text-white mb-4">KYC Documents</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Aadhar -->
+                        <div class="bg-[#0B0E16] p-4 rounded-xl border border-white/5">
+                            <label class="block text-sm font-bold text-gray-300 mb-2">Aadhar Card</label>
+                            <% if(vendor.aadharImage) { %>
+                                <p class="text-xs text-emerald-400 mb-2">✅ Uploaded</p>
+                            <% } %>
+                            <input type="file" name="aadhar" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20">
+                        </div>
+
+                        <!-- PAN -->
+                        <div class="bg-[#0B0E16] p-4 rounded-xl border border-white/5">
+                            <label class="block text-sm font-bold text-gray-300 mb-2">PAN Card</label>
+                            <% if(vendor.panImage) { %>
+                                <p class="text-xs text-emerald-400 mb-2">✅ Uploaded</p>
+                            <% } %>
+                            <input type="file" name="pan" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20">
+                        </div>
+                    </div>
+                </div>
+
                 <button type="submit" class="w-full bg-gradient-primary text-white font-bold rounded-xl py-3.5 shadow-lg hover:-translate-y-0.5 transition-all">
-                    Save Settings
+                    Save Settings & Submit KYC
                 </button>
             </form>
+
         </div>
     </main>
 

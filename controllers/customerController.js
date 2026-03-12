@@ -77,9 +77,7 @@ exports.placeOrder = async (req, res) => {
         const table = await Table.findById(tableId).populate('vendorId');
         
         // Check if store is closed
-        if (!table.vendorId.isOpen) {
-            return res.status(400).json({ error: 'Sorry, the restaurant is not accepting orders right now.' });
-        }
+        if (!table.vendorId.isOpen || !table.vendorId.isApproved) { return res.status(400).json({ error: 'Restaurant cannot accept orders right now.' }) }
 
         let totalAmount = 0;
         cart.forEach(item => totalAmount += (item.price * item.quantity));

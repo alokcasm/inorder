@@ -8,14 +8,18 @@ exports.getDashboard = async (req, res) => {
     try {
         const vendorId = req.session.user.id;
         
-        // Fetch active orders (Pending, Preparing, Ready)
+        // 1. Fetch the vendor to check their LIVE approval status
+        const vendor = await User.findById(vendorId);
+
+        // 2. Fetch active orders
         const activeOrders = await Order.find({ 
             vendorId, 
             orderStatus: { $in: ['Pending', 'Preparing', 'Ready'] } 
-        }).sort({ createdAt: 1 }); // Oldest first (Queue system)
+        }).sort({ createdAt: 1 }); 
 
         res.render('vendor/dashboard', { 
             user: req.session.user, 
+            vendor: vendor, // <-- Pass the vendor data to the dashboard
             orders: activeOrders 
         });
     } catch (error) {
@@ -153,14 +157,22 @@ exports.getSettings = async (req, res) => {
 exports.updateSettings = async (req, res) => {
     try {
         const { upiId, isOpen } = req.body;
-        // Checkboxes return 'on' if checked, undefined if unchecked
         const shopStatus = isOpen === 'on' ? true : false; 
 
-        await User.findByIdAndUpdate(req.session.user.id, {
-            upiId: upiId,
-            isOpen: shopStatus
-        });
+        // Prepare the data to update
+        let updateData = { upiId, isOpen: shopStatus };
 
+        // Check if Aadhar was uploaded
+        if (req.files && req.files.aadhar) {
+            updateData.aadharImage = '/uploads/' + req.files.aadhar[0].filename;
+        }
+
+        // Check if PAN was uploaded
+        if (req.files && req.files.pan) {
+            updateData.panImage = '/uploads/' + req.files.pan[0].filename;
+        }
+
+        await User.findByIdAndUpdate(req.session.user.id, updateData);
         res.redirect('/vendor/settings');
     } catch (error) {
         console.error(error);
