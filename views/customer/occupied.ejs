@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Occupied</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #07090F; color: #ffffff; }</style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6 text-center">
+    <div class="bg-[#121624] border border-white/10 p-8 rounded-3xl max-w-sm shadow-2xl">
+        <div class="text-6xl mb-4">✋</div>
+        <h1 class="text-2xl font-bold mb-2">Table <%= tableNumber %> is Occupied</h1>
+        <p class="text-gray-400 text-sm">Someone is currently ordering or eating at this table at <%= shopName %>. Please wait until they finish or ask staff for a different table.</p>
+    </div>
+</body>
+</html>

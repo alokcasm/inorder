@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Super Admin - inOrder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #07090F; color: #ffffff; }
+        .bg-gradient-primary { background-image: linear-gradient(to right, #8b5cf6, #3b82f6); } /* Purple/Blue for Admin */
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Admin Navbar -->
+    <nav class="bg-[#0B0E16] border-b border-white/[0.05] sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.4)]">
+                    <span class="font-bold text-white text-sm">A</span>
+                </div>
+                <span class="text-xl font-bold tracking-tight">inOrder Admin</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="/admin/dashboard" class="text-blue-400 font-medium">Overview</a>
+                <a href="/admin/vendors" class="text-gray-400 hover:text-white transition">Vendors</a>
+                <a href="/logout" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-medium transition">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <h1 class="text-3xl font-bold mb-8">Platform Overview</h1>
+
+        <!-- Top Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-[#121624] border border-white/5 rounded-2xl p-6 shadow-lg relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 text-8xl opacity-5">🏪</div>
+                <p class="text-gray-400 text-sm font-medium mb-1">Total Vendors</p>
+                <h2 class="text-4xl font-bold text-white"><%= totalVendors %></h2>
+            </div>
+            
+            <div class="bg-[#121624] border border-white/5 rounded-2xl p-6 shadow-lg relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 text-8xl opacity-5">🧾</div>
+                <p class="text-gray-400 text-sm font-medium mb-1">Total Orders Processed</p>
+                <h2 class="text-4xl font-bold text-white"><%= totalOrders %></h2>
+            </div>
+
+            <div class="bg-[#121624] border border-white/5 rounded-2xl p-6 shadow-lg relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 text-8xl opacity-5">💰</div>
+                <p class="text-gray-400 text-sm font-medium mb-1">Platform Revenue (GMV)</p>
+                <h2 class="text-4xl font-bold text-emerald-400">₹<%= totalRevenue %></h2>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <h2 class="text-xl font-bold mb-4">Recently Joined Vendors</h2>
+        <div class="bg-[#121624] border border-white/5 rounded-2xl overflow-hidden shadow-lg">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#0B0E16] text-gray-400 text-sm border-b border-white/5">
+                        <th class="p-4 font-medium">Shop Name</th>
+                        <th class="p-4 font-medium">Owner</th>
+                        <th class="p-4 font-medium">Phone</th>
+                        <th class="p-4 font-medium">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    <% recentVendors.forEach(v => { %>
+                        <tr class="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
+                            <td class="p-4 font-semibold text-white"><%= v.shopName %></td>
+                            <td class="p-4 text-gray-300"><%= v.name %></td>
+                            <td class="p-4 text-gray-400"><%= v.phone %></td>
+                            <td class="p-4">
+                                <% if(v.isApproved) { %>
+                                    <span class="bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded text-xs font-bold border border-emerald-500/20">Active</span>
+                                <% } else { %>
+                                    <span class="bg-red-500/10 text-red-400 px-2.5 py-1 rounded text-xs font-bold border border-red-500/20">Suspended</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <h2 class="text-xl font-bold mb-4 mt-12">Top Performing Vendors</h2>
+        <div class="bg-[#121624] border border-white/5 rounded-2xl overflow-hidden shadow-lg mb-10">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#0B0E16] text-gray-400 text-sm border-b border-white/5">
+                        <th class="p-4 font-medium">Shop Name</th>
+                        <th class="p-4 font-medium">Owner</th>
+                        <th class="p-4 font-medium">Total Orders</th>
+                        <th class="p-4 font-medium">Total Revenue Generated</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    <% if(vendorPerformance.length === 0) { %>
+                        <tr><td colspan="4" class="p-6 text-center text-gray-500">No sales data yet.</td></tr>
+                    <% } else { %>
+                        <% vendorPerformance.forEach((v, index) => { %>
+                            <tr class="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
+                                <td class="p-4 font-semibold text-white">
+                                    <% if(index === 0) { %>👑 <% } %>
+                                    <%= v.vendorDetails.shopName %>
+                                </td>
+                                <td class="p-4 text-gray-300"><%= v.vendorDetails.name %></td>
+                                <td class="p-4 font-bold text-gray-300"><%= v.orderCount %></td>
+                                <td class="p-4 text-emerald-400 font-bold text-lg">₹<%= v.totalRevenue %></td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+</body>
+</html>
