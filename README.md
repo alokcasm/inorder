@@ -51,32 +51,52 @@ This system helps restaurants improve service speed, reduce human errors, and pr
 ```
 InOrder
 │
-├── models
-│   ├── Order.js
-│   ├── Restaurant.js
-│   └── Menu.js
+├── config/
+│   └── db.js                 // Database connection (MongoDB)
 │
-├── routes
-│   ├── customer.js
-│   ├── restaurant.js
-│   └── auth.js
+├── models/
+│   ├── User.js               // Schema for Admins & Vendors
+│   ├── Item.js               // Schema for Menu Items
+│   ├── Order.js              // Schema for Customer Orders
+│   └── Table.js              // Schema for Tables & QR Codes
 │
-├── views
-│   ├── customer
-│   ├── restaurant
-│   └── partials
+├── controllers/
+│   ├── authController.js     // Handles Login/Registration
+│   ├── customerController.js // Handles Menu viewing, Cart, Checkout
+│   ├── vendorController.js   // Handles Vendor Dashboard, Order Status
+│   └── adminController.js    // Handles Super Admin Dashboard
 │
-├── public
-│   ├── css
-│   ├── js
-│   └── images
+├── routes/
+│   ├── indexRoutes.js        // Landing page & Auth routes
+│   ├── customerRoutes.js     // /t/:tableId (QR scan routes)
+│   ├── vendorRoutes.js       // /vendor/... routes
+│   └── adminRoutes.js        // /admin/... routes
 │
-├── config
-│   └── db.js
+├── middleware/
+│   └── authMiddleware.js     // Protects routes (Checks if user is Vendor/Admin)
 │
-├── app.js
-├── server.js
-└── package.json
+├── views/                    // EJS Frontend Templates
+│   ├── partials/             // header.ejs, footer.ejs, alerts.ejs
+│   ├── auth/                 // login.ejs, register.ejs
+│   ├── customer/
+│   │   ├── menu.ejs          // Digital Menu
+│   │   ├── cart.ejs          // Cart & Checkout
+│   │   └── track.ejs         // Live order tracking
+│   ├── vendor/
+│   │   ├── dashboard.ejs     // Live Order Queue
+│   │   └── menu-manage.ejs   // Add/Edit Menu Items
+│   └── admin/
+│       ├── dashboard.ejs     // System stats
+│       └── vendors.ejs       // Approve/Manage Vendors
+│
+├── public/                   // Static files (accessible to browser)
+│   ├── css/                  // Tailwind/Custom CSS
+│   ├── js/                   // Client-side JS (Socket.io for live updates)
+│   └── uploads/              // Menu images, QR codes
+│
+├── .env                      // Environment variables (DB URI, Secrets)
+├── package.json              // NPM dependencies
+└── server.js                 // Main entry point of the app
 ```
 
 ---
