@@ -147,8 +147,7 @@ http://localhost:3000
 
 ## 👨‍💻 Author
 
-**Alok**
-BCA Student
+Upparwala
 
 GitHub:
 https://github.com/alokcasm
