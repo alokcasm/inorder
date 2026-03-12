@@ -6,14 +6,15 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     role: { type: String, enum: ['admin', 'vendor'], default: 'vendor' },
     
-    // Vendor specific fields
     shopName: { type: String },
     shopAddress: { type: String },
     isApproved: { type: Boolean, default: false }, 
+    isOpen: { type: Boolean, default: true }, 
+    upiId: { type: String, default: '' },     
     
-    // NEW ADVANCED FEATURES:
-    isOpen: { type: Boolean, default: true }, // Restaurant ON/OFF toggle
-    upiId: { type: String, default: '' },     // For accepting payments
+    // NEW: KYC Documents
+    aadharImage: { type: String, default: '' },
+    panImage: { type: String, default: '' },
     
     createdAt: { type: Date, default: Date.now }
 });

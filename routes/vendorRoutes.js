@@ -33,7 +33,7 @@ router.post('/table/add', vendorController.addTable);
 
 // Vendor Settings (ON/OFF Toggle & UPI)
 router.get('/settings', vendorController.getSettings);
-router.post('/settings/update', vendorController.updateSettings);
+router.post('/settings/update', upload.fields([{ name: 'aadhar' }, { name: 'pan' }]), vendorController.updateSettings);
 router.get('/reports', vendorController.getReports);
 
 module.exports = router;
