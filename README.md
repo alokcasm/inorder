@@ -49,54 +49,72 @@ This system helps restaurants improve service speed, reduce human errors, and pr
 ## 📂 Project Structure
 
 ```
-InOrder
+InOrder/
 │
 ├── config/
-│   └── db.js                 // Database connection (MongoDB)
-│
-├── models/
-│   ├── User.js               // Schema for Admins & Vendors
-│   ├── Item.js               // Schema for Menu Items
-│   ├── Order.js              // Schema for Customer Orders
-│   └── Table.js              // Schema for Tables & QR Codes
+│   └── db.js
 │
 ├── controllers/
-│   ├── authController.js     // Handles Login/Registration
-│   ├── customerController.js // Handles Menu viewing, Cart, Checkout
-│   ├── vendorController.js   // Handles Vendor Dashboard, Order Status
-│   └── adminController.js    // Handles Super Admin Dashboard
-│
-├── routes/
-│   ├── indexRoutes.js        // Landing page & Auth routes
-│   ├── customerRoutes.js     // /t/:tableId (QR scan routes)
-│   ├── vendorRoutes.js       // /vendor/... routes
-│   └── adminRoutes.js        // /admin/... routes
+│   ├── adminController.js
+│   ├── authController.js
+│   ├── customerController.js
+│   └── vendorController.js
 │
 ├── middleware/
-│   └── authMiddleware.js     // Protects routes (Checks if user is Vendor/Admin)
+│   └── authMiddleware.js
 │
-├── views/                    // EJS Frontend Templates
-│   ├── partials/             // header.ejs, footer.ejs, alerts.ejs
-│   ├── auth/                 // login.ejs, register.ejs
+├── models/
+│   ├── Item.js
+│   ├── Order.js
+│   ├── Table.js
+│   └── User.js
+│
+├── public/
+│   ├── css/
+│   ├── js/
+│   └── uploads/
+│
+├── routes/
+│   ├── adminRoutes.js
+│   ├── customerRoutes.js
+│   ├── indexRoutes.js
+│   └── vendorRoutes.js
+│
+├── views/
+│   │
+│   ├── admin/
+│   │   ├── dashboard.ejs
+│   │   └── vendors.ejs
+│   │
+│   ├── auth/
+│   │   ├── login.ejs
+│   │   └── register.ejs
+│   │
 │   ├── customer/
-│   │   ├── menu.ejs          // Digital Menu
-│   │   ├── cart.ejs          // Cart & Checkout
-│   │   └── track.ejs         // Live order tracking
+│   │   ├── cart.ejs
+│   │   ├── menu.ejs
+│   │   ├── occupied.ejs
+│   │   ├── receipt.ejs
+│   │   └── track.ejs
+│   │
 │   ├── vendor/
-│   │   ├── dashboard.ejs     // Live Order Queue
-│   │   └── menu-manage.ejs   // Add/Edit Menu Items
-│   └── admin/
-│       ├── dashboard.ejs     // System stats
-│       └── vendors.ejs       // Approve/Manage Vendors
+│   │   ├── dashboard.ejs
+│   │   ├── menu.ejs
+│   │   ├── reports.ejs
+│   │   └── settings.ejs
+│   │
+│   ├── partials/
+│   │   ├── alerts.ejs
+│   │   ├── footer.ejs
+│   │   └── header.ejs
+│   │
+│   └── index.ejs
 │
-├── public/                   // Static files (accessible to browser)
-│   ├── css/                  // Tailwind/Custom CSS
-│   ├── js/                   // Client-side JS (Socket.io for live updates)
-│   └── uploads/              // Menu images, QR codes
-│
-├── .env                      // Environment variables (DB URI, Secrets)
-├── package.json              // NPM dependencies
-└── server.js                 // Main entry point of the app
+├── .env
+├── package.json
+├── package-lock.json
+├── README.md
+└── server.js
 ```
 
 ---
