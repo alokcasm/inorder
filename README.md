@@ -147,8 +147,8 @@ http://localhost:3000
 
 ## 👨‍💻 Author
 
-**Alok Sainya**
-BCA Student & Developer
+**Alok**
+BCA Student
 
 GitHub:
 https://github.com/alokcasm
