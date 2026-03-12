@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - inOrder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #07090F; color: #ffffff; }
+        .bg-gradient-primary { background-image: linear-gradient(to right, #FF6B00, #FF3D3D); }
+    </style>
+</head>
+<body class="antialiased flex items-center justify-center min-h-screen relative overflow-hidden selection:bg-orange-500/30 py-10">
+    
+    <!-- Ambient Background Glows -->
+    <div class="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-orange-600/10 blur-[120px] pointer-events-none z-[-1]"></div>
+    <div class="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-red-600/10 blur-[120px] pointer-events-none z-[-1]"></div>
+
+    <div class="w-full max-w-md px-6 z-10">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold tracking-tight">Join inOrder</h1>
+            <p class="text-gray-400 mt-2 text-sm font-light">Setup your vendor account in seconds</p>
+        </div>
+
+        <!-- Register Card -->
+        <div class="bg-[#121624] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none"></div>
+            
+            <% if (error) { %>
+                <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-xl mb-6 text-center backdrop-blur-sm">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <form action="/register" method="POST" class="space-y-4 relative z-10">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">Full Name</label>
+                    <input type="text" name="name" required class="w-full bg-[#0B0E16] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="John Doe">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">Shop / Cafe Name</label>
+                    <input type="text" name="shopName" required class="w-full bg-[#0B0E16] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="The Brew Bar">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">Phone Number</label>
+                    <input type="tel" name="phone" required class="w-full bg-[#0B0E16] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="9876543210">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
+                    <input type="password" name="password" required class="w-full bg-[#0B0E16] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="••••••••">
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-primary text-white font-bold rounded-xl px-4 py-3.5 mt-4 shadow-[0_4px_15px_rgba(255,107,0,0.3)] hover:shadow-[0_6px_25px_rgba(255,107,0,0.5)] transition-all transform hover:-translate-y-0.5">
+                    Create Account
+                </button>
+            </form>
+            
+            <p class="text-center text-sm text-gray-400 mt-6 relative z-10">
+                Already a vendor? <a href="/login" class="text-orange-500 hover:text-orange-400 font-medium transition-colors">Sign in</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

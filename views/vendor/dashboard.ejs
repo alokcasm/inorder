@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Dashboard - inOrder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #07090F; color: #ffffff; }
+        .bg-gradient-primary { background-image: linear-gradient(to right, #FF6B00, #FF3D3D); }
+    </style>
+</head>
+<body class="antialiased selection:bg-orange-500/30">
+
+    <!-- Navbar -->
+    <nav class="bg-[#0B0E16] border-b border-white/[0.05] sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-[0_0_15px_rgba(255,107,0,0.4)]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                </div>
+                <span class="text-xl font-bold"><%= user.shopName %></span>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="/vendor/dashboard" class="text-orange-500 font-medium">Live Orders</a>
+                <a href="/vendor/menu" class="text-gray-400 hover:text-white transition">Menu</a>
+                <a href="/vendor/settings" class="text-gray-400 hover:text-white transition">Settings</a>
+                <a href="/vendor/reports" class="text-gray-400 hover:text-white transition">Reports</a>
+                <a href="/logout" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-medium transition">Logout</a>
+                
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">Live Order Queue</h1>
+                <p class="text-gray-400 text-sm">Manage incoming orders from your tables.</p>
+            </div>
+            <div class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Accepting Orders
+            </div>
+        </div>
+
+        <% if (orders.length === 0) { %>
+            <div class="bg-[#121624] border border-white/5 rounded-2xl p-12 text-center shadow-lg">
+                <div class="text-6xl mb-4">🍽️</div>
+                <h3 class="text-xl font-bold text-white mb-2">No active orders right now</h3>
+                <p class="text-gray-500 text-sm">When customers scan your QR code and order, they will appear here instantly.</p>
+            </div>
+        <% } else { %>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- We will loop through orders here later when customers make them! -->
+            </div>
+        <% } %>
+    </main>
+
+    <!-- Socket.io for Real-Time Updates (To be implemented) -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        socket.emit('joinVendorRoom', '<%= user.id %>');
+        
+        // Listen for new orders
+        socket.on('newOrder', (order) => {
+            // Play a sound alert!
+            const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+            audio.play();
+            // Reload page to show new order (We can make this dynamic later)
+            setTimeout(() => window.location.reload(), 1000);
+        });
+    </script>
+</body>
+</html>
+ <% if (orders.length === 0) { %>
+            <div class="bg-[#121624] border border-white/5 rounded-2xl p-12 text-center shadow-lg">
+                <div class="text-6xl mb-4">🍽️</div>
+                <h3 class="text-xl font-bold text-white mb-2">No active orders right now</h3>
+                <p class="text-gray-500 text-sm">When customers scan your QR code and order, they will appear here instantly.</p>
+            </div>
+        <% } else { %>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <% orders.forEach(order => { %>
+                    <!-- Order Card -->
+                    <div class="bg-[#121624] border border-white/[0.05] rounded-2xl p-5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex flex-col relative overflow-hidden">
+                        
+                        <!-- Glowing border top based on status -->
+                        <% if(order.orderStatus === 'Pending') { %>
+                            <div class="absolute top-0 left-0 w-full h-1 bg-orange-500 shadow-[0_0_15px_rgba(255,107,0,0.8)]"></div>
+                        <% } else if(order.orderStatus === 'Preparing') { %>
+                            <div class="absolute top-0 left-0 w-full h-1 bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.8)]"></div>
+                        <% } else if(order.orderStatus === 'Ready') { %>
+                            <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)]"></div>
+                        <% } %>
+
+                        <!-- Card Header -->
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-2xl font-bold text-white">Table <%= order.tableNumber %></h3>
+                                <p class="text-xs text-gray-500 mt-1">#<%= order._id.toString().slice(-5) %> • <%= order.orderStatus %></p>
+                            </div>
+                            <div class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded border border-emerald-500/20 uppercase">
+                                <%= order.paymentStatus %>
+                            </div>
+                        </div>
+
+                        <!-- Items List -->
+                        <div class="flex-1 bg-[#0B0E16] rounded-xl p-3 mb-4 space-y-2 border border-white/[0.02]">
+                            <% order.items.forEach(item => { %>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-300"><span class="text-orange-500 font-bold"><%= item.quantity %>x</span> <%= item.name %></span>
+                                </div>
+                            <% }) %>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center justify-between mt-auto">
+                            <span class="font-bold text-lg text-white">₹<%= order.totalAmount %></span>
+                            
+                            <!-- Dynamic Forms based on status -->
+                            <form action="/vendor/order/update" method="POST">
+                                <input type="hidden" name="orderId" value="<%= order._id %>">
+                                
+                                <% if(order.orderStatus === 'Pending') { %>
+                                    <input type="hidden" name="status" value="Preparing">
+                                    <button type="submit" class="bg-orange-500 hover:bg-orange-400 text-white font-bold py-2 px-6 rounded-lg shadow-[0_4px_15px_rgba(255,107,0,0.3)] transition-colors text-sm">
+                                        Accept & Prepare
+                                    </button>
+                                <% } else if(order.orderStatus === 'Preparing') { %>
+                                    <input type="hidden" name="status" value="Ready">
+                                    <button type="submit" class="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2 px-6 rounded-lg shadow-[0_4px_15px_rgba(250,204,21,0.3)] transition-colors text-sm">
+                                        Mark as Ready
+                                    </button>
+                                <% } else if(order.orderStatus === 'Ready') { %>
+                                    <input type="hidden" name="status" value="Served">
+                                    <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-2 px-6 rounded-lg shadow-[0_4px_15px_rgba(16,185,129,0.3)] transition-colors text-sm">
+                                        Complete
+                                    </button>
+                                <% } %>
+                            </form>
+                        </div>
+
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
