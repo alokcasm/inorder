@@ -5,185 +5,227 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Menu - <%= vendor.shopName %></title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #07090F; color: #ffffff; }
-        .bg-gradient-primary { background-image: linear-gradient(to right, #FF6B00, #FF3D3D); }
-        /* Hide scrollbar for a native app feel */
+        body { font-family: 'Inter', sans-serif; background-color: #07090F; color: #ffffff; padding-bottom: 120px; }
         ::-webkit-scrollbar { display: none; }
+        .bg-gradient-primary { background-image: linear-gradient(to right, #FF6B00, #FF3D3D); }
+        .item-card { border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .item-card:last-child { border-bottom: none; }
     </style>
 </head>
-<body class="antialiased pb-32">
+<body class="antialiased">
 
-    <!-- Header -->
-    <div class="bg-[#0B0E16] border-b border-white/5 px-5 pt-8 pb-4 sticky top-0 z-40">
-        <p class="text-[10px] text-orange-500 font-bold uppercase tracking-widest mb-1">Ordering At</p>
-        <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold"><%= vendor.shopName %></h1>
-            <div class="bg-white/10 px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-1.5">
-                <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                <span class="text-xs font-semibold">Table <%= table.tableNumber %></span>
+    <!-- Premium Header -->
+    <div class="px-5 pt-8 pb-5 bg-[#0B0E16] sticky top-0 z-40 border-b border-white/[0.05] shadow-md">
+        <div class="flex justify-between items-center mb-1">
+            <h1 class="text-2xl font-extrabold tracking-tight text-white"><%= vendor.shopName %></h1>
+            <div class="bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 shadow-inner">
+                <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                <span class="text-xs font-bold tracking-wider uppercase text-gray-200">Table <%= table.tableNumber %></span>
             </div>
         </div>
+        <p class="text-xs text-gray-400 font-medium">Hello, <%= customerName %> 👋 • ✨ Browse our menu</p>
     </div>
 
-    <!-- Menu Items -->
-    <div class="px-5 py-6 space-y-4">
+    <!-- Menu Items List -->
+    <div class="px-5 py-2">
         <% if (items.length === 0) { %>
-            <p class="text-gray-500 text-center py-10">Menu is currently empty.</p>
+            <div class="text-center py-20">
+                <div class="text-6xl mb-4 opacity-50">🍽️</div>
+                <p class="text-gray-400 font-medium">The menu is currently empty.</p>
+            </div>
         <% } else { %>
             <% items.forEach(item => { %>
                 
-                <!-- Helper variable to determine the final price -->
+                <!-- Determine exact price to charge -->
                 <% const currentPrice = item.offerPrice ? item.offerPrice : item.price; %>
+                <!-- Get real order count from database -->
+                <% const displayCount = item.orderCount || 0; %>
                 
-                <div class="bg-[#121624] border border-white/[0.04] p-3 rounded-2xl flex items-center gap-4 shadow-lg">
-                    <img src="<%= item.image %>" alt="<%= item.name %>" class="w-20 h-20 rounded-xl object-cover bg-[#0B0E16]">
-                    <div class="flex-1">
-                        <h3 class="text-white font-semibold leading-tight"><%= item.name %></h3>
-                        <p class="text-xs text-gray-400 mt-0.5 mb-1.5"><%= item.category %></p>
-                        
-                        <!-- Display Strikethrough if Offer Price exists -->
-                        <div>
-                            <% if(item.offerPrice) { %>
-                                <span class="text-gray-500 line-through text-[11px] mr-1">₹<%= item.price %></span>
+                <div class="item-card py-6 flex justify-between gap-4">
+                    
+                    <!-- Left Side: Details -->
+                    <div class="flex-1 pr-2">
+                        <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                            <!-- Bestseller Tag (Shows if ordered 5 or more times) -->
+                            <% if(displayCount >= 5) { %>
+                                <span class="bg-orange-500/20 text-orange-400 text-[9px] px-1.5 py-0.5 rounded font-bold tracking-widest border border-orange-500/30 uppercase">
+                                    🌟 Bestseller
+                                </span>
                             <% } %>
-                            <span class="text-orange-400 font-bold">₹<%= currentPrice %></span>
+                            
+                            <!-- Real Order Count Tag -->
+                            <% if(displayCount > 0) { %>
+                                <span class="text-yellow-400 text-[10px] font-medium flex items-center gap-1">
+                                    📈 Ordered <%= displayCount %> times
+                                </span>
+                            <% } %>
+                        </div>
+                        
+                        <h3 class="text-[17px] font-bold text-white leading-tight mb-1"><%= item.name %></h3>
+                        
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="font-bold text-base text-gray-200">₹<%= currentPrice %></span>
+                            <% if(item.offerPrice) { %>
+                                <span class="text-gray-500 line-through text-xs">₹<%= item.price %></span>
+                            <% } %>
+                        </div>
+
+                        <% if(item.category) { %>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-2"><%= item.category %></p>
+                        <% } %>
+                        
+                        <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed"><%= item.description || 'Delicious and freshly prepared just for you.' %></p>
+                    </div>
+
+                    <!-- Right Side: Image & Controls -->
+                    <div class="w-32 h-32 shrink-0 relative">
+                        <div class="w-full h-full rounded-2xl overflow-hidden bg-[#121624] border border-white/5 shadow-lg relative">
+                            <img src="<%= item.image %>" alt="<%= item.name %>" class="w-full h-full object-cover opacity-90">
+                            <!-- Gradient overlay so the button pops -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        </div>
+
+                        <!-- Dynamic Control Container (Rendered by JS) -->
+                        <div id="controls-<%= item._id %>" class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[85%] z-10">
+                            <!-- JS will inject ADD or [ - 1 + ] here -->
                         </div>
                     </div>
-                    
-                    <!-- Add to Cart Button -->
-                    <button onclick="addToCart('<%= item._id %>', '<%= item.name %>', <%= currentPrice %>)" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-orange-500 text-xl font-medium hover:bg-orange-500/20 transition-colors active:scale-95 shrink-0">
-                        +
-                    </button>
                 </div>
             <% }) %>
         <% } %>
     </div>
 
-    <!-- Sticky Bottom Checkout Bar -->
-    <% if (!vendor.isApproved) { %>
-        <!-- KYC PENDING OR SUSPENDED -->
+    <!-- Sticky Bottom Cart Bar -->
+    <% if (!vendor.isOpen || !vendor.isApproved) { %>
         <div class="fixed bottom-0 left-0 w-full bg-red-600 text-white text-center py-5 font-bold z-50 shadow-[0_-10px_30px_rgba(220,38,38,0.4)]">
-            🚫 Restaurant is currently suspended / awaiting verification.
-        </div>
-    <% } else if (!vendor.isOpen) { %>
-        <!-- RESTAURANT TURNED OFF SWITCH -->
-        <div class="fixed bottom-0 left-0 w-full bg-yellow-500 text-black text-center py-5 font-bold z-50 shadow-[0_-10px_30px_rgba(234,179,8,0.3)]">
-            ⚠️ The kitchen is currently closed or busy.
+            🚫 Ordering is currently unavailable.
         </div>
     <% } else { %>
-        <!-- ALL GOOD - SHOW PAYMENT BUTTON -->
-        <div class="fixed bottom-0 left-0 w-full bg-gradient-to-t from-[#07090F] via-[#07090F] to-transparent pt-10 pb-6 px-5 z-50">
-            <button id="checkoutBtn" onclick="initiateCheckout('<%= table._id %>')" class="hidden w-full bg-gradient-primary text-white font-bold py-4 rounded-2xl shadow-[0_10px_25px_rgba(255,107,0,0.3)] flex justify-between items-center px-6 transform active:scale-[0.98] transition-transform">
+        <div class="fixed bottom-0 left-0 w-full bg-gradient-to-t from-[#07090F] via-[#07090F] to-transparent pt-12 pb-5 px-5 z-50 pointer-events-none">
+            <!-- This links directly to the Cart page now -->
+            <a href="/t/<%= table._id %>/cart" id="checkoutBtn" class="hidden w-full bg-gradient-primary text-white font-bold py-3.5 rounded-2xl shadow-[0_10px_30px_rgba(255,107,0,0.4)] flex justify-between items-center px-5 pointer-events-auto active:scale-[0.98] transition-transform">
                 <div class="flex flex-col text-left">
-                    <span class="text-[10px] uppercase tracking-wider text-white/80">Total Amount</span>
-                    <span class="text-xl" id="cartTotal">₹0</span>
+                    <span id="cartItemsCount" class="text-[10px] uppercase tracking-widest text-white/80 font-bold mb-0.5">0 Items</span>
+                    <span class="text-lg leading-none" id="cartTotal">₹0</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    Pay & Order <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <div class="flex items-center gap-2 text-sm uppercase tracking-wider">
+                    View Cart <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </div>
-            </button>
+            </a>
         </div>
     <% } %>
 
-    <!-- Razorpay & Cart Scripts -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
-        let total = 0;
-        const checkoutBtn = document.getElementById('checkoutBtn');
-        const cartTotalEl = document.getElementById('cartTotal');
+        // Load initial cart state from the server session
+        let localCart = <%- JSON.stringify(cart || []) %>;
+        
+        // Wait for page to load, then render all buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAllControls();
+            updateBottomBar();
+        });
 
-        // Add to cart logic
-        function addToCart(itemId, name, price) {
+        // Generates the UI for the buttons (+/- or ADD)
+        function renderAllControls() {
+            <% items.forEach(item => { %>
+                <% const finalPrice = item.offerPrice ? item.offerPrice : item.price; %>
+                renderControl('<%= item._id %>', '<%= item.name %>', <%= finalPrice %>);
+            <% }) %>
+        }
+
+        // Render a specific item's button based on cart quantity
+        function renderControl(itemId, name, price) {
+            const container = document.getElementById(`controls-${itemId}`);
+            if(!container) return;
+
+            const cartItem = localCart.find(i => i.itemId === itemId);
+            const qty = cartItem ? cartItem.quantity : 0;
+
+            if (qty === 0) {
+                // Show standard "ADD" button
+                container.innerHTML = `
+                    <button onclick="handleAddToCart('${itemId}', '${name}', ${price})" class="w-full bg-orange-100 text-orange-600 font-extrabold text-sm py-2 rounded-xl border border-orange-200 shadow-[0_4px_10px_rgba(0,0,0,0.3)] active:scale-95 transition-transform uppercase tracking-wider backdrop-blur-md">
+                        ADD
+                    </button>
+                `;
+            } else {
+                // Show Zomato-style [ - | Qty | + ] button
+                container.innerHTML = `
+                    <div class="w-full bg-orange-500 text-white font-bold text-sm py-1.5 rounded-xl shadow-[0_4px_10px_rgba(255,107,0,0.4)] flex justify-between items-center px-2">
+                        <button onclick="updateCartItem('${itemId}', 'decrease')" class="w-6 h-6 flex items-center justify-center text-lg active:scale-75 transition-transform">-</button>
+                        <span>${qty}</span>
+                        <button onclick="updateCartItem('${itemId}', 'increase')" class="w-6 h-6 flex items-center justify-center text-lg active:scale-75 transition-transform">+</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Function 1: Initial Add to Cart
+        function handleAddToCart(itemId, name, price) {
+            if (navigator.vibrate) navigator.vibrate(50);
+            
             fetch('/cart/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ itemId, name, price })
             }).then(res => res.json()).then(data => {
                 if(data.success) {
-                    // Recalculate total from server cart
-                    total = data.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                    cartTotalEl.innerText = '₹' + total;
-                    
-                    if(checkoutBtn) checkoutBtn.classList.remove('hidden'); // Show button
-                    if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback
+                    localCart = data.cart;
+                    renderControl(itemId, name, price);
+                    updateBottomBar();
                 }
             });
         }
 
-        // Razorpay Payment Logic
-        function initiateCheckout(tableId) {
-            if (!checkoutBtn) return;
-            
-            checkoutBtn.innerText = "Processing..."; 
-            checkoutBtn.disabled = true;
+        // Function 2: Increase / Decrease Quantity
+        function updateCartItem(itemId, action) {
+            if (navigator.vibrate) navigator.vibrate(30);
 
-            fetch('/checkout', {
+            // Optimistic UI update (feels faster to the user)
+            const item = localCart.find(i => i.itemId === itemId);
+            if (action === 'increase') item.quantity++;
+            if (action === 'decrease') item.quantity--;
+            if (item.quantity <= 0) localCart = localCart.filter(i => i.itemId !== itemId);
+            
+            // Re-render button instantly
+            renderControl(itemId, item ? item.name : '', item ? item.price : 0);
+            updateBottomBar();
+
+            // Send actual request to backend
+            fetch('/cart/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tableId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                    window.location.reload();
-                    return;
+                body: JSON.stringify({ itemId, action })
+            }).then(res => res.json()).then(data => {
+                if(data.success) {
+                    localCart = data.cart; // Sync with server truth
+                    updateBottomBar();
                 }
-
-                // Configure Razorpay Modal
-                var options = {
-                    "key": data.key, 
-                    "amount": data.amount, 
-                    "currency": "INR",
-                    "name": data.shopName,
-                    "description": "Food Order Payment",
-                    "order_id": data.razorpayOrderId, 
-                    "handler": function (response) {
-                        // Payment Success! Verify signature on backend
-                        fetch('/verify-payment', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_signature: response.razorpay_signature,
-                                dbOrderId: data.orderId
-                            })
-                        }).then(res => res.json()).then(verifyData => {
-                            if(verifyData.success) {
-                                window.location.href = verifyData.redirectUrl; // Redirect to Live Tracking!
-                            } else {
-                                alert("Payment verification failed!");
-                                checkoutBtn.innerText = "Pay & Order";
-                                checkoutBtn.disabled = false;
-                            }
-                        });
-                    },
-                    "theme": { "color": "#FF6B00" }
-                };
-                
-                var rzp = new Razorpay(options);
-                rzp.on('payment.failed', function (response){
-                    alert("Payment Failed. Please try again.");
-                    checkoutBtn.innerHTML = `
-                        <div class="flex flex-col text-left">
-                            <span class="text-[10px] uppercase tracking-wider text-white/80">Total Amount</span>
-                            <span class="text-xl">₹${total}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            Pay & Order <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        </div>
-                    `;
-                    checkoutBtn.disabled = false;
-                });
-                rzp.open();
-            })
-            .catch(err => {
-                alert("Something went wrong initializing payment");
-                window.location.reload();
             });
+        }
+
+        // Updates the Sticky Footer
+        function updateBottomBar() {
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            if(!checkoutBtn) return;
+
+            let totalItems = 0;
+            let totalPrice = 0;
+
+            localCart.forEach(item => {
+                totalItems += item.quantity;
+                totalPrice += (item.price * item.quantity);
+            });
+
+            if (totalItems > 0) {
+                checkoutBtn.classList.remove('hidden');
+                document.getElementById('cartItemsCount').innerText = `${totalItems} ITEM${totalItems > 1 ? 'S' : ''}`;
+                document.getElementById('cartTotal').innerText = `₹${totalPrice}`;
+            } else {
+                checkoutBtn.classList.add('hidden');
+            }
         }
     </script>
 </body>

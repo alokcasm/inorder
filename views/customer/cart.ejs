@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cart - <%= vendor.shopName %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #07090F; color: #ffffff; }</style>
+</head>
+<body class="antialiased pb-32 px-5 pt-8">
+
+    <!-- CALCULATE SUBTOTAL AT THE VERY TOP -->
+    <% 
+        let subTotal = 0; 
+        if (cart && cart.length > 0) {
+            cart.forEach(item => { subTotal += (item.price * item.quantity); });
+        }
+    %>
+
+    <div class="flex items-center gap-4 mb-8 border-b border-white/5 pb-4">
+        <a href="/t/<%= table._id %>" class="text-gray-400 hover:text-white">← Back to Menu</a>
+        <h1 class="text-2xl font-bold">Your Cart</h1>
+    </div>
+
+    <% if(cart.length === 0) { %>
+        <p class="text-gray-400 text-center mt-10">Cart is empty. Go back and add some delicious food!</p>
+    <% } else { %>
+        
+        <!-- Cart Items -->
+        <div class="bg-[#121624] border border-white/5 rounded-2xl p-5 mb-6 shadow-lg space-y-4">
+            <% cart.forEach(item => { %>
+                <div class="flex justify-between items-center pb-4 border-b border-white/5 last:border-0 last:pb-0">
+                    <div>
+                        <h4 class="font-bold text-white"><%= item.name %></h4>
+                        <p class="text-xs text-gray-500">₹<%= item.price %> x <%= item.quantity %></p>
+                    </div>
+                    <div class="font-bold text-orange-400">₹<%= item.price * item.quantity %></div>
+                </div>
+            <% }) %>
+        </div>
+
+        <!-- Coupon Section -->
+        <div class="bg-[#121624] border border-white/5 rounded-2xl p-5 mb-6 shadow-lg">
+            <h3 class="text-sm font-bold text-gray-300 mb-3">Apply Coupon</h3>
+            <div class="flex gap-2">
+                <input type="text" id="couponCode" class="flex-1 bg-[#0B0E16] border border-white/10 rounded-xl px-4 py-2 text-white uppercase outline-none focus:border-orange-500" placeholder="ENTER CODE">
+                <button onclick="applyCoupon()" class="bg-white/10 hover:bg-white/20 font-bold px-4 rounded-xl transition text-sm">Apply</button>
+            </div>
+            <p id="couponMsg" class="text-xs mt-2 font-bold"></p>
+        </div>
+
+        <!-- Bill Summary -->
+        <div class="bg-[#121624] border border-white/5 rounded-2xl p-5 mb-6 shadow-lg">
+            <h3 class="font-bold text-white mb-4">Bill Summary</h3>
+            <div class="flex justify-between text-sm text-gray-400 mb-2">
+                <span>Subtotal</span>
+                <span>₹<%= subTotal %></span>
+            </div>
+            <div class="flex justify-between text-sm text-emerald-400 mb-4 font-bold" id="discountRow" style="display: none;">
+                <span>Discount Applied</span>
+                <span id="discountVal">-₹0</span>
+            </div>
+            <div class="flex justify-between text-lg text-white font-bold border-t border-white/10 pt-4">
+                <span>Grand Total</span>
+                <span id="grandTotal">₹<%= subTotal %></span>
+            </div>
+        </div>
+
+        <!-- Fixed Bottom Pay Button -->
+        <div class="fixed bottom-0 left-0 w-full bg-[#07090F] p-5 z-50">
+            <button id="checkoutBtn" onclick="startPayment()" class="w-full bg-orange-500 text-white font-bold py-4 rounded-2xl shadow-[0_10px_20px_rgba(255,107,0,0.3)] active:scale-95 transition-transform text-lg">
+                Pay Now
+            </button>
+        </div>
+
+    <% } %>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        const tableId = '<%= table._id %>';
+        const vendorId = '<%= vendor._id %>';
+        // Now the JavaScript can successfully grab the subTotal!
+        let currentSubTotal = <%= subTotal %>;
+
+        // AJAX Coupon Apply
+        function applyCoupon() {
+            const code = document.getElementById('couponCode').value;
+            fetch('/cart/apply-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, vendorId })
+            }).then(res => res.json()).then(data => {
+                const msg = document.getElementById('couponMsg');
+                if(!data.success) {
+                    msg.innerText = data.message; 
+                    msg.className = "text-xs mt-2 font-bold text-red-500";
+                    return;
+                }
+                
+                // Calculate discount visually
+                let discount = 0;
+                if(data.coupon.discountType === 'FLAT') {
+                    discount = data.coupon.discountValue;
+                } else {
+                    discount = (currentSubTotal * data.coupon.discountValue) / 100;
+                }
+                
+                let newTotal = currentSubTotal - discount;
+                if(newTotal <= 0) newTotal = 1; // Razorpay requires at least ₹1 to process a transaction
+
+                // Update UI
+                msg.innerText = "Coupon Applied Successfully! 🎉"; 
+                msg.className = "text-xs mt-2 font-bold text-emerald-400";
+                
+                document.getElementById('discountRow').style.display = "flex";
+                document.getElementById('discountVal').innerText = "-₹" + discount;
+                document.getElementById('grandTotal').innerText = "₹" + newTotal;
+            });
+        }
+
+        // Razorpay Payment
+        function startPayment() {
+            const btn = document.getElementById('checkoutBtn');
+            btn.innerText = "Creating Order... ⏳"; 
+            btn.disabled = true;
+
+            fetch('/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tableId })
+            }).then(res => res.json()).then(data => {
+                if(data.error) { 
+                    alert(data.error); 
+                    window.location.reload(); 
+                    return; 
+                }
+
+                var options = {
+                    "key": data.key, 
+                    "amount": data.amount, 
+                    "currency": "INR", 
+                    "name": data.shopName, 
+                    "order_id": data.razorpayOrderId,
+                    "prefill": { "name": data.prefill.name, "contact": data.prefill.contact },
+                    "handler": function (response) {
+                        btn.innerText = "Verifying Payment... ✅";
+                        fetch('/verify-payment', {
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature,
+                                dbOrderId: data.orderId
+                            })
+                        }).then(res => res.json()).then(verify => {
+                            if(verify.success) window.location.href = verify.redirectUrl;
+                        });
+                    },
+                    "modal": {
+                        "ondismiss": function() {
+                            btn.innerText = "Pay Now";
+                            btn.disabled = false;
+                        }
+                    },
+                    "theme": { "color": "#FF6B00" }
+                };
+                var rzp = new Razorpay(options);
+                rzp.open();
+            });
+        }
+    </script>
+</body>
+</html>
