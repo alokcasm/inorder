@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const Item = require('../models/Item');
 const Table = require('../models/Table');
 const QRCode = require('qrcode');
+const Coupon = require('../models/Coupon');
 
 // 1. Load the Dashboard (Live Orders)
 exports.getDashboard = async (req, res) => {
@@ -236,6 +237,44 @@ exports.editItem = async (req, res) => {
 
         await Item.findByIdAndUpdate(req.params.id, updateData);
         res.redirect('/vendor/menu');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
+    }
+};
+
+exports.getSettings = async (req, res) => {
+    try {
+        const vendor = await User.findById(req.session.user.id);
+        const coupons = await Coupon.find({ vendorId: req.session.user.id }); // Fetch coupons
+        res.render('vendor/settings', { user: req.session.user, vendor, coupons });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
+    }
+};
+
+exports.addCoupon = async (req, res) => {
+    try {
+        const { code, discountType, discountValue } = req.body;
+        const newCoupon = new Coupon({
+            vendorId: req.session.user.id,
+            code: code.toUpperCase(),
+            discountType,
+            discountValue
+        });
+        await newCoupon.save();
+        res.redirect('/vendor/settings');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
+    }
+};
+
+exports.deleteCoupon = async (req, res) => {
+    try {
+        await Coupon.findByIdAndDelete(req.params.id);
+        res.redirect('/vendor/settings');
     } catch (error) {
         console.error(error);
         res.status(500).send('Server Error');

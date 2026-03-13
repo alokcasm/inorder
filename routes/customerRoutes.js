@@ -14,4 +14,13 @@ router.get('/track/:orderId', customerController.trackOrder);
 router.post('/order/rate', customerController.submitRating); // New
 router.get('/receipt/:orderId', customerController.getReceipt);
 
+router.get('/t/:tableId', customerController.getMenu);
+router.post('/t/:tableId/join', customerController.joinTable); // NEW
+
+
+router.get('/t/:tableId/cart', customerController.getCart);
+router.post('/cart/apply-coupon', customerController.applyCoupon);
+
+router.post('/cart/update', customerController.updateCartItem);
+
 module.exports = router;

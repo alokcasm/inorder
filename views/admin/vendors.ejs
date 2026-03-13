@@ -31,20 +31,6 @@
 
     <!-- Content -->
     <main class="max-w-7xl mx-auto px-6 py-8">
-         <!-- 🚨 ADD THIS NEW WARNING BANNER 🚨 -->
-        <% if (!vendor.isApproved) { %>
-            <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 mb-8 flex items-start gap-4 shadow-lg animate-pulse">
-                <div class="text-3xl">🛑</div>
-                <div>
-                    <h2 class="text-xl font-bold text-red-400">Account Not Approved Yet</h2>
-                    <p class="text-sm text-red-300 mt-1">You can build your menu and generate QR codes, but <b>customers cannot place orders</b> until an Admin verifies your account.</p>
-                    <a href="/vendor/settings" class="inline-block mt-3 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
-                        Go to Settings to Upload KYC
-                    </a>
-                </div>
-            </div>
-        <% } %>
-        <!-- 🚨 END WARNING BANNER 🚨 -->
         <h1 class="text-3xl font-bold mb-8">Vendor Management</h1>
 
         <div class="bg-[#121624] border border-white/5 rounded-2xl p-6 shadow-lg">

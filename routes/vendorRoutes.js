@@ -35,5 +35,7 @@ router.post('/table/add', vendorController.addTable);
 router.get('/settings', vendorController.getSettings);
 router.post('/settings/update', upload.fields([{ name: 'aadhar' }, { name: 'pan' }]), vendorController.updateSettings);
 router.get('/reports', vendorController.getReports);
+router.post('/coupon/add', vendorController.addCoupon);
+router.post('/coupon/delete/:id', vendorController.deleteCoupon);
 
 module.exports = router;
