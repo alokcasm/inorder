@@ -59,9 +59,17 @@
 
         <div class="dashed-line"></div>
 
-        <!-- Totals -->
+         <!-- Totals -->
         <div class="text-right space-y-1">
-            <p class="text-xl font-bold">TOTAL: ₹<%= order.totalAmount %></p>
+            <p class="text-sm">SUBTOTAL: ₹<%= order.totalAmount %></p>
+            
+            <% if (order.discountApplied && order.discountApplied > 0) { %>
+                <p class="text-sm font-bold">DISCOUNT: -₹<%= order.discountApplied %></p>
+            <% } %>
+            
+            <div class="dashed-line"></div>
+            <!-- USE FINAL AMOUNT HERE -->
+            <p class="text-xl font-bold">GRAND TOTAL: ₹<%= order.finalAmount || order.totalAmount %></p>
             <p class="text-sm uppercase">PAID VIA: <%= order.paymentMethod %></p>
         </div>
 
@@ -70,7 +78,7 @@
         <!-- Footer -->
         <div class="text-center mt-6">
             <p class="text-sm font-bold">Thank you for dining with us!</p>
-            <p class="text-xs mt-2">Powered by QueueZero</p>
+            <p class="text-xs mt-2">Powered by InOrder</p>
         </div>
 
         <!-- Print Button (Hidden during actual printing) -->

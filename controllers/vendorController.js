@@ -70,27 +70,22 @@ exports.getMenuManager = async (req, res) => {
 // 4. Add a New Menu Item
 exports.addItem = async (req, res) => {
     try {
-        const { name, price, category, description } = req.body;
+        // Add dietType here:
+        const { name, price, category, description, dietType } = req.body; 
         
-        // Check if an image was uploaded, otherwise use default
         let imagePath = '/uploads/default-food.png';
-        if (req.file) {
-            imagePath = '/uploads/' + req.file.filename;
-        }
+        if (req.file) imagePath = '/uploads/' + req.file.filename;
 
         const newItem = new Item({
             vendorId: req.session.user.id,
-            name, 
-            price, 
-            category, 
-            description,
-            image: imagePath // Save the image path!
+            name, price, category, description,
+            dietType, // Save to DB
+            image: imagePath
         });
         await newItem.save();
         res.redirect('/vendor/menu');
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
+        console.error(error); res.status(500).send('Server Error');
     }
 };
 
@@ -227,21 +222,20 @@ exports.getReports = async (req, res) => {
 
 exports.editItem = async (req, res) => {
     try {
-        const { name, price, offerPrice, category } = req.body;
+        // Add dietType here:
+        const { name, price, offerPrice, category, dietType } = req.body;
         
-        let updateData = { name, price, offerPrice: offerPrice || null, category };
+        let updateData = { name, price, offerPrice: offerPrice || null, category, dietType };
         
-        if (req.file) {
-            updateData.image = '/uploads/' + req.file.filename;
-        }
+        if (req.file) updateData.image = '/uploads/' + req.file.filename;
 
         await Item.findByIdAndUpdate(req.params.id, updateData);
         res.redirect('/vendor/menu');
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
+        console.error(error); res.status(500).send('Server Error');
     }
 };
+
 
 exports.getSettings = async (req, res) => {
     try {
