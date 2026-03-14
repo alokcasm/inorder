@@ -1,17 +1,13 @@
-const session = require("express-session");
-const MongoStore = require("connect-mongo");
+const mongoose = require('mongoose');
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI,
-    }),
-    cookie: {
-      secure: true,
-      maxAge: 1000 * 60 * 60 * 24
+const connectDB = async () => {
+    try {
+        const conn = await mongoose.connect(process.env.MONGO_URI);
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
+    } catch (error) {
+        console.error(`Error connecting to MongoDB: ${error.message}`);
+        process.exit(1); // Stop the app if database connection fails
     }
-  })
-);
+};
+
+module.exports = connectDB;
