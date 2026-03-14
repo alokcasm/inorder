@@ -5,91 +5,161 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Menu - <%= vendor.shopName %></title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #07090F; color: #ffffff; padding-bottom: 120px; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #07090F; 
+            color: #ffffff; 
+            padding-bottom: 120px; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
         ::-webkit-scrollbar { display: none; }
-        .bg-gradient-primary { background-image: linear-gradient(to right, #FF6B00, #FF3D3D); }
-        .item-card { border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .bg-gradient-primary { background-image: linear-gradient(135deg, #FF6B00, #FF3D3D); }
+        
+        .filter-btn { transition: all 0.2s ease; }
+        .filter-active { 
+            background-color: rgba(255, 107, 0, 0.12) !important; 
+            border-color: rgba(255, 107, 0, 0.4) !important; 
+            color: #FF6B00 !important; 
+        }
+
+        /* Clean compact list separators */
+        .item-card { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .item-card:last-child { border-bottom: none; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease forwards; }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased selection:bg-orange-500/30">
 
-    <!-- Premium Header -->
-    <div class="px-5 pt-8 pb-5 bg-[#0B0E16] sticky top-0 z-40 border-b border-white/[0.05] shadow-md">
-        <div class="flex justify-between items-center mb-1">
-            <h1 class="text-2xl font-extrabold tracking-tight text-white"><%= vendor.shopName %></h1>
-            <div class="bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2 shadow-inner">
-                <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                <span class="text-xs font-bold tracking-wider uppercase text-gray-200">Table <%= table.tableNumber %></span>
+    <!-- STICKY TOP SECTION -->
+    <div class="sticky top-0 z-40 bg-[#07090F]/90 backdrop-blur-xl border-b border-white/[0.04] pt-5 pb-3 px-4 shadow-sm">
+        
+        <!-- Header Info -->
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <h1 class="text-xl font-extrabold tracking-tight text-white leading-tight"><%= vendor.shopName %></h1>
+                <p class="text-[11px] text-gray-400 font-medium mt-0.5">Welcome, <span class="text-orange-400 font-semibold"><%= customerName %></span> 👋</p>
+            </div>
+            <div class="bg-white/5 px-3 py-1.5 rounded-full border border-white/5 flex items-center gap-2">
+                <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                <span class="text-[10px] font-bold tracking-wider uppercase text-gray-300">Table <%= table.tableNumber %></span>
             </div>
         </div>
-        <p class="text-xs text-gray-400 font-medium">Hello, <%= customerName %> 👋 • ✨ Browse our menu</p>
+        
+        <!-- Compact Search Bar -->
+        <div class="relative mb-4 group">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-orange-500 transition-colors" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchInput" onkeyup="filterMenu()" placeholder="Search for dishes..." class="w-full bg-[#11141E] border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white font-medium focus:outline-none focus:border-orange-500/30 focus:bg-[#161A26] transition-all placeholder-gray-500">
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="flex gap-2.5 overflow-x-auto no-scrollbar snap-x pb-1">
+            <button onclick="setFilter('All', this)" class="filter-btn filter-active shrink-0 bg-[#11141E] border border-white/5 text-gray-300 text-[11px] font-bold px-4 py-2 rounded-lg snap-start">All</button>
+            
+            <button onclick="setFilter('Veg', this)" class="filter-btn shrink-0 bg-[#11141E] border border-white/5 text-gray-300 text-[11px] font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 snap-start">
+                <div class="w-2.5 h-2.5 border border-green-500 flex items-center justify-center rounded-sm"><div class="w-1 h-1 bg-green-500 rounded-full"></div></div> Veg
+            </button>
+            
+            <button onclick="setFilter('Non-Veg', this)" class="filter-btn shrink-0 bg-[#11141E] border border-white/5 text-gray-300 text-[11px] font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 snap-start">
+                <div class="w-2.5 h-2.5 border border-red-500 flex items-center justify-center rounded-sm"><div class="w-1 h-1 bg-red-500 rounded-full"></div></div> Non-Veg
+            </button>
+            
+            <% 
+                const categories = [...new Set(items.map(item => item.category))]; 
+                categories.forEach(cat => { 
+            %>
+                <button onclick="setFilter('<%= cat %>', this)" class="filter-btn shrink-0 bg-[#11141E] border border-white/5 text-gray-300 text-[11px] font-bold px-4 py-2 rounded-lg snap-start"><%= cat %></button>
+            <% }) %>
+        </div>
     </div>
 
-    <!-- Menu Items List -->
-    <div class="px-5 py-2">
+    <!-- MENU ITEMS LIST (Clean & Compact) -->
+    <div class="px-4 py-1" id="menuContainer">
         <% if (items.length === 0) { %>
-            <div class="text-center py-20">
-                <div class="text-6xl mb-4 opacity-50">🍽️</div>
-                <p class="text-gray-400 font-medium">The menu is currently empty.</p>
+            <div class="text-center py-20 animate-fade-in">
+                <span class="text-4xl opacity-50 block mb-3">🍽️</span>
+                <p class="text-gray-400 font-medium text-sm">The menu is currently empty.</p>
             </div>
         <% } else { %>
-            <% items.forEach(item => { %>
-                
-                <!-- Determine exact price to charge -->
+            <% items.forEach((item, index) => { %>
                 <% const currentPrice = item.offerPrice ? item.offerPrice : item.price; %>
-                <!-- Get real order count from database -->
                 <% const displayCount = item.orderCount || 0; %>
                 
-                <div class="item-card py-6 flex justify-between gap-4">
+                <!-- Clean List Item -->
+                <div class="item-card py-5 flex justify-between gap-3 animate-fade-in" 
+                     style="animation-delay: <%= index * 0.03 %>s;" 
+                     data-category="<%= item.category %>" 
+                     data-diet="<%= item.dietType || 'Veg' %>" 
+                     data-name="<%= item.name.toLowerCase() %>">
                     
-                    <!-- Left Side: Details -->
-                    <div class="flex-1 pr-2">
-                        <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                            <!-- Bestseller Tag (Shows if ordered 5 or more times) -->
-                            <% if(displayCount >= 5) { %>
-                                <span class="bg-orange-500/20 text-orange-400 text-[9px] px-1.5 py-0.5 rounded font-bold tracking-widest border border-orange-500/30 uppercase">
-                                    🌟 Bestseller
-                                </span>
-                            <% } %>
-                            
-                            <!-- Real Order Count Tag -->
-                            <% if(displayCount > 0) { %>
-                                <span class="text-yellow-400 text-[10px] font-medium flex items-center gap-1">
-                                    📈 Ordered <%= displayCount %> times
-                                </span>
-                            <% } %>
-                        </div>
+                    <!-- Left Side: Item Details -->
+                    <div class="flex-1 pr-1">
                         
-                        <h3 class="text-[17px] font-bold text-white leading-tight mb-1"><%= item.name %></h3>
-                        
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="font-bold text-base text-gray-200">₹<%= currentPrice %></span>
-                            <% if(item.offerPrice) { %>
-                                <span class="text-gray-500 line-through text-xs">₹<%= item.price %></span>
-                            <% } %>
-                        </div>
 
-                        <% if(item.category) { %>
-                            <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-2"><%= item.category %></p>
+                        <!--Bestseller Tag Row -->
+                        <% if(displayCount >= 5) { %>
+                                <span class="bg-orange-500/10 text-orange-400 text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider uppercase border border-orange-500/20">
+                                    ⭐ Bestseller
+                                </span>
+                            <% } %>
+
+                        <!-- Ordered Count -->
+                        <% if(displayCount > 0) { %>
+                            <p class="text-[10px] text-yellow-500/90 font-semibold mb-1.5 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                Ordered <%= displayCount %> times
+                            </p>
+                        <% } else { %>
+                            <div class="mb-1.5"></div> <!-- Spacing if no count -->
                         <% } %>
                         
-                        <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed"><%= item.description || 'Delicious and freshly prepared just for you.' %></p>
+                        <!-- Title -->
+                        <!-- Diet Icon -->
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <% if(item.dietType === 'Non-Veg') { %>
+                                <div class="w-3.5 h-3.5 border border-red-500 flex items-center justify-center rounded-[3px] shrink-0"><div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div></div>
+                            <% } else if(item.dietType === 'Egg') { %>
+                                <div class="w-3.5 h-3.5 border border-yellow-500 flex items-center justify-center rounded-[3px] shrink-0"><div class="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div></div>
+                            <% } else { %>
+                                <div class="w-3.5 h-3.5 border border-green-500 flex items-center justify-center rounded-[3px] shrink-0"><div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div></div>
+                            <% } %>
+
+                            
+                            <h3 class="text-[15px] font-bold text-white leading-tight mb-0.5"><%= item.name %></h3>
+                        </div>
+                        
+                        
+                        
+
+                        <!-- Price -->
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="font-bold text-[14px] text-gray-100">₹<%= currentPrice %></span>
+                            <% if(item.offerPrice) { %>
+                                <span class="text-gray-500 font-medium line-through text-[11px]">₹<%= item.price %></span>
+                            <% } %>
+                        </div>
+
+                        <!-- Description -->
+                        <p class="text-[11px] text-gray-400 line-clamp-2 leading-relaxed font-medium"><%= item.description || item.category %></p>
                     </div>
 
-                    <!-- Right Side: Image & Controls -->
-                    <div class="w-32 h-32 shrink-0 relative">
-                        <div class="w-full h-full rounded-2xl overflow-hidden bg-[#121624] border border-white/5 shadow-lg relative">
-                            <img src="<%= item.image %>" alt="<%= item.name %>" class="w-full h-full object-cover opacity-90">
-                            <!-- Gradient overlay so the button pops -->
+                    <!-- Right Side: Compact Image & Add Button -->
+                    <div class="w-[110px] shrink-0 flex flex-col items-center relative mt-1">
+                        <div class="w-[110px] h-[100px] rounded-xl overflow-hidden bg-[#11141E] border border-white/5 relative">
+                            <img src="<%= item.image %>" alt="<%= item.name %>" class="w-full h-full object-cover">
+                            <!-- Inner shadow so white button text is readable -->
                             <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                         </div>
 
-                        <!-- Dynamic Control Container (Rendered by JS) -->
+                        <!-- Dynamic Control Container positioned slightly overlapping the image -->
                         <div id="controls-<%= item._id %>" class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[85%] z-10">
-                            <!-- JS will inject ADD or [ - 1 + ] here -->
+                            <!-- JS injects compact controls here -->
                         </div>
                     </div>
                 </div>
@@ -97,45 +167,84 @@
         <% } %>
     </div>
 
-    <!-- Sticky Bottom Cart Bar -->
+    <!-- Empty Search Result -->
+    <div id="noResults" class="hidden text-center py-20">
+        <span class="text-4xl opacity-50 block mb-3">🔍</span>
+        <p class="text-gray-400 font-medium text-sm">No items match your search.</p>
+    </div>
+
+    <!-- STICKY BOTTOM CART BAR -->
     <% if (!vendor.isOpen || !vendor.isApproved) { %>
-        <div class="fixed bottom-0 left-0 w-full bg-red-600 text-white text-center py-5 font-bold z-50 shadow-[0_-10px_30px_rgba(220,38,38,0.4)]">
+        <div class="fixed bottom-0 left-0 w-full bg-[#11141E] border-t border-red-500/20 text-red-400 text-center py-5 font-bold z-50 text-[13px] shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
             🚫 Ordering is currently unavailable.
         </div>
     <% } else { %>
-        <div class="fixed bottom-0 left-0 w-full bg-gradient-to-t from-[#07090F] via-[#07090F] to-transparent pt-12 pb-5 px-5 z-50 pointer-events-none">
-            <!-- This links directly to the Cart page now -->
-            <a href="/t/<%= table._id %>/cart" id="checkoutBtn" class="hidden w-full bg-gradient-primary text-white font-bold py-3.5 rounded-2xl shadow-[0_10px_30px_rgba(255,107,0,0.4)] flex justify-between items-center px-5 pointer-events-auto active:scale-[0.98] transition-transform">
+        <div class="fixed bottom-0 left-0 w-full bg-gradient-to-t from-[#07090F] via-[#07090F] to-transparent pt-12 pb-5 px-4 z-50 pointer-events-none">
+            <a href="/t/<%= table._id %>/cart" id="checkoutBtn" class="hidden w-full bg-gradient-primary text-white py-3.5 rounded-2xl shadow-[0_8px_25px_rgba(255,107,0,0.3)] flex justify-between items-center px-5 pointer-events-auto active:scale-[0.98] transition-transform">
                 <div class="flex flex-col text-left">
-                    <span id="cartItemsCount" class="text-[10px] uppercase tracking-widest text-white/80 font-bold mb-0.5">0 Items</span>
-                    <span class="text-lg leading-none" id="cartTotal">₹0</span>
+                    <span id="cartItemsCount" class="text-[10px] uppercase tracking-wider text-white/90 font-bold">0 Items</span>
+                    <span class="text-lg font-extrabold leading-tight" id="cartTotal">₹0</span>
                 </div>
-                <div class="flex items-center gap-2 text-sm uppercase tracking-wider">
-                    View Cart <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <div class="flex items-center gap-1.5 text-[14px] font-bold">
+                    View Cart 
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </div>
             </a>
         </div>
     <% } %>
 
+    <!-- SCRIPTS -->
     <script>
-        // Load initial cart state from the server session
         let localCart = <%- JSON.stringify(cart || []) %>;
+        let currentFilter = 'All';
         
-        // Wait for page to load, then render all buttons
         document.addEventListener('DOMContentLoaded', () => {
             renderAllControls();
             updateBottomBar();
         });
 
-        // Generates the UI for the buttons (+/- or ADD)
+        function setFilter(filterName, btnElement) {
+            currentFilter = filterName;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('filter-active'));
+            btnElement.classList.add('filter-active');
+            filterMenu();
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+
+        function filterMenu() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.item-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const itemName = card.getAttribute('data-name');
+                const itemCategory = card.getAttribute('data-category');
+                const itemDiet = card.getAttribute('data-diet');
+                const matchesSearch = itemName.includes(searchQuery);
+
+                let matchesFilter = false;
+                if (currentFilter === 'All') matchesFilter = true;
+                else if (currentFilter === 'Veg' && itemDiet === 'Veg') matchesFilter = true;
+                else if (currentFilter === 'Non-Veg' && itemDiet === 'Non-Veg') matchesFilter = true;
+                else if (currentFilter === itemCategory) matchesFilter = true;
+
+                if (matchesSearch && matchesFilter) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
         function renderAllControls() {
             <% items.forEach(item => { %>
                 <% const finalPrice = item.offerPrice ? item.offerPrice : item.price; %>
-                renderControl('<%= item._id %>', '<%= item.name %>', <%= finalPrice %>);
+                renderControl('<%= item._id %>', `<%= item.name.replace(/'/g, "\\'") %>`, <%= finalPrice %>);
             <% }) %>
         }
 
-        // Render a specific item's button based on cart quantity
         function renderControl(itemId, name, price) {
             const container = document.getElementById(`controls-${itemId}`);
             if(!container) return;
@@ -144,87 +253,69 @@
             const qty = cartItem ? cartItem.quantity : 0;
 
             if (qty === 0) {
-                // Show standard "ADD" button
+                // Highly compact, clean white add button
                 container.innerHTML = `
-                    <button onclick="handleAddToCart('${itemId}', '${name}', ${price})" class="w-full bg-orange-100 text-orange-600 font-extrabold text-sm py-2 rounded-xl border border-orange-200 shadow-[0_4px_10px_rgba(0,0,0,0.3)] active:scale-95 transition-transform uppercase tracking-wider backdrop-blur-md">
+                    <button onclick="handleAddToCart('${itemId}', '${name}', ${price})" class="w-full bg-[#f8f9fa] text-[#FF6B00] font-extrabold text-[12px] py-1.5 rounded-lg shadow-md active:scale-95 transition-transform uppercase tracking-wide border border-white/10">
                         ADD
                     </button>
                 `;
             } else {
-                // Show Zomato-style [ - | Qty | + ] button
+                // Compact increment/decrement controls
                 container.innerHTML = `
-                    <div class="w-full bg-orange-500 text-white font-bold text-sm py-1.5 rounded-xl shadow-[0_4px_10px_rgba(255,107,0,0.4)] flex justify-between items-center px-2">
-                        <button onclick="updateCartItem('${itemId}', 'decrease')" class="w-6 h-6 flex items-center justify-center text-lg active:scale-75 transition-transform">-</button>
-                        <span>${qty}</span>
-                        <button onclick="updateCartItem('${itemId}', 'increase')" class="w-6 h-6 flex items-center justify-center text-lg active:scale-75 transition-transform">+</button>
+                    <div class="w-full bg-gradient-primary text-white font-bold text-[13px] h-8 rounded-lg shadow-md flex justify-between items-center px-1 border border-orange-500/50">
+                        <button onclick="updateCartItem('${itemId}', 'decrease')" class="w-7 h-full flex items-center justify-center text-lg active:scale-75 transition-transform">-</button>
+                        <span class="font-extrabold">${qty}</span>
+                        <button onclick="updateCartItem('${itemId}', 'increase')" class="w-7 h-full flex items-center justify-center text-lg active:scale-75 transition-transform">+</button>
                     </div>
                 `;
             }
         }
 
-        // Function 1: Initial Add to Cart
         function handleAddToCart(itemId, name, price) {
-            if (navigator.vibrate) navigator.vibrate(50);
-            
+            if (navigator.vibrate) navigator.vibrate(30);
+            localCart.push({ itemId, name, price, quantity: 1 });
+            renderControl(itemId, name, price);
+            updateBottomBar();
+
             fetch('/cart/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ itemId, name, price })
             }).then(res => res.json()).then(data => {
-                if(data.success) {
-                    localCart = data.cart;
-                    renderControl(itemId, name, price);
-                    updateBottomBar();
-                }
+                if(data.success) { localCart = data.cart; updateBottomBar(); }
             });
         }
 
-        // Function 2: Increase / Decrease Quantity
         function updateCartItem(itemId, action) {
-            if (navigator.vibrate) navigator.vibrate(30);
-
-            // Optimistic UI update (feels faster to the user)
+            if (navigator.vibrate) navigator.vibrate(20);
             const item = localCart.find(i => i.itemId === itemId);
             if (action === 'increase') item.quantity++;
             if (action === 'decrease') item.quantity--;
             if (item.quantity <= 0) localCart = localCart.filter(i => i.itemId !== itemId);
             
-            // Re-render button instantly
             renderControl(itemId, item ? item.name : '', item ? item.price : 0);
             updateBottomBar();
 
-            // Send actual request to backend
             fetch('/cart/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ itemId, action })
             }).then(res => res.json()).then(data => {
-                if(data.success) {
-                    localCart = data.cart; // Sync with server truth
-                    updateBottomBar();
-                }
+                if(data.success) { localCart = data.cart; updateBottomBar(); }
             });
         }
 
-        // Updates the Sticky Footer
         function updateBottomBar() {
             const checkoutBtn = document.getElementById('checkoutBtn');
             if(!checkoutBtn) return;
-
-            let totalItems = 0;
-            let totalPrice = 0;
-
-            localCart.forEach(item => {
-                totalItems += item.quantity;
-                totalPrice += (item.price * item.quantity);
-            });
-
+            
+            let totalItems = 0, totalPrice = 0;
+            localCart.forEach(item => { totalItems += item.quantity; totalPrice += (item.price * item.quantity); });
+            
             if (totalItems > 0) {
                 checkoutBtn.classList.remove('hidden');
                 document.getElementById('cartItemsCount').innerText = `${totalItems} ITEM${totalItems > 1 ? 'S' : ''}`;
                 document.getElementById('cartTotal').innerText = `₹${totalPrice}`;
-            } else {
-                checkoutBtn.classList.add('hidden');
+            } else { 
+                checkoutBtn.classList.add('hidden'); 
             }
         }
     </script>

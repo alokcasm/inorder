@@ -7,9 +7,10 @@ const itemSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     offerPrice: { type: Number }, 
     category: { type: String, required: true }, 
+    dietType: { type: String, enum: ['Veg', 'Non-Veg'], default: 'Veg' }, // NEW: Veg/Non-Veg indicator
     image: { type: String, default: '/uploads/default-food.png' }, 
     isAvailable: { type: Boolean, default: true }, 
-    orderCount: { type: Number, default: 0 }, // NEW: To track popularity
+    orderCount: { type: Number, default: 0 }, 
     createdAt: { type: Date, default: Date.now }
 });
 
