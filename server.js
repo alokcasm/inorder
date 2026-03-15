@@ -30,23 +30,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Session Setup (Vercel Compatible)
+// Session Setup
 app.use(session({
     secret: process.env.SESSION_SECRET || "supersecret123",
     resave: false,
     saveUninitialized: false,
 
-    // Store sessions in MongoDB (important for Vercel)
+    // MongoDB session store (important for Vercel)
     store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI,
-        collectionName: "sessions"
+        mongoUrl: process.env.MONGO_URI
     }),
 
     cookie: {
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
         sameSite: "lax",
-        maxAge: 1000 * 60 * 60 * 24 // 1 day
+        maxAge: 1000 * 60 * 60 * 24
     }
 }));
 
@@ -56,17 +55,15 @@ app.use((req, res, next) => {
     next();
 });
 
-// Real-time Socket.io Connection
+// Socket.io connection
 io.on('connection', (socket) => {
-    console.log('User connected via WebSocket');
+    console.log('User connected');
 
-    // Vendor joins dashboard room
     socket.on('joinVendorRoom', (vendorId) => {
         socket.join(vendorId);
         console.log(`Vendor joined room: ${vendorId}`);
     });
 
-    // Customer joins order tracking room
     socket.on('joinOrderRoom', (orderId) => {
         socket.join(orderId);
         console.log(`Customer joined order room: ${orderId}`);
