@@ -13,13 +13,11 @@
             color: #ffffff; 
             -webkit-tap-highlight-color: transparent;
         }
-        
         ::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         .bg-gradient-primary { background-image: linear-gradient(135deg, #FF6B00, #FF3D3D); }
         
-        /* Smooth fade in */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s ease forwards; opacity: 0; }
     </style>
@@ -28,43 +26,65 @@
 
     <!-- Minimal Sticky Header -->
     <header class="sticky top-0 z-40 bg-[#07090F]/90 backdrop-blur-xl px-4 py-3.5 flex items-center justify-between border-b border-white/[0.04] shadow-sm">
-        <button onclick="if(navigator.vibrate) navigator.vibrate(10); window.history.back()" class="w-[38px] h-[38px] flex items-center justify-center text-white active:scale-90 transition-transform bg-[#11141E] border border-white/5 rounded-full shadow-sm">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
+        <div class="w-[38px]"></div> <!-- Left spacer for centering -->
         
         <div class="flex flex-col items-center justify-center">
             <h1 class="text-[17px] font-extrabold tracking-tight text-white"><%= vendor.shopName %></h1>
-            <div class="bg-white/10 px-2.5 py-0.5 mt-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase text-gray-300">
+            <div class="bg-white/10 px-2.5 py-0.5 mt-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase text-gray-300 flex items-center gap-1.5">
+                <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_5px_rgba(52,211,153,0.8)]"></div>
                 Table <%= order.tableNumber %>
             </div>
         </div>
         
-        <div class="w-[38px]"></div> <!-- Spacer for perfect centering -->
+        <div class="w-[38px]"></div> <!-- Right spacer for centering -->
     </header>
 
     <main class="px-4 pt-6 max-w-md mx-auto">
         
         <!-- LIVE STATUS BADGE -->
-        <div class="bg-[#11141E] border border-white/[0.04] rounded-3xl p-8 text-center shadow-sm relative overflow-hidden mb-6 animate-fade-in" style="animation-delay: 0s;">
-            <!-- Subtle glow behind the status -->
+        <div class="bg-[#11141E] border border-white/[0.04] rounded-3xl p-8 text-center shadow-[0_10px_30px_rgba(0,0,0,0.5)] relative overflow-hidden mb-6 animate-fade-in" style="animation-delay: 0s;">
             <div class="absolute inset-0 bg-gradient-to-br from-[#FF6B00]/5 to-transparent pointer-events-none"></div>
             
             <p class="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-2 relative z-10">Current Status</p>
             
-            <!-- Updates via Socket.io -->
-            <h2 id="liveStatus" class="text-[32px] font-black text-[#FF6B00] leading-none tracking-tight relative z-10 animate-pulse pb-1">
+            <h2 id="liveStatus" class="text-[32px] font-black text-[#FF6B00] leading-none tracking-tight relative z-10 animate-pulse pb-1 drop-shadow-md">
                 <%= order.orderStatus %>
             </h2>
             
-            <p class="text-[12px] font-medium text-gray-400 mt-4 relative z-10">Order ID: #<%= order._id.toString().slice(-6) %></p>
+            <p class="text-[11px] font-medium text-gray-400 mt-4 relative z-10">Order ID: #<%= order._id.toString().slice(-6).toUpperCase() %></p>
         </div>
 
+        <!-- ⏱️ 2-MINUTE GRACE PERIOD & ACTIONS -->
+        <% if (order.orderStatus === 'Pending' || order.orderStatus === 'Preparing') { %>
+            <div class="animate-fade-in" style="animation-delay: 0.1s;">
+                <!-- Timer Card -->
+                <div class="bg-[#11141E] border border-white/[0.04] rounded-2xl p-4 mb-4 shadow-sm flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-white text-[14px] leading-tight mb-0.5">Need to change something?</h4>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Grace period remaining</p>
+                    </div>
+                    <div class="text-right">
+                        <span id="timerDisplay" class="font-mono text-lg font-black text-[#FF6B00] bg-[#FF6B00]/10 px-3 py-1.5 rounded-xl border border-[#FF6B00]/20 transition-colors shadow-inner">02:00</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 mb-6">
+                    <button id="editOrderBtn" onclick="handleEditClick()" class="flex-1 bg-[#11141E] hover:bg-white/5 text-white text-[12px] font-bold py-3.5 rounded-xl border border-white/[0.05] transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2">
+                        <span class="text-base">✏️</span> Edit Items
+                    </button>
+                    <a href="/t/<%= tableId %>?addMore=true" class="flex-1 bg-gradient-primary text-white text-center text-[12px] font-bold py-3.5 rounded-xl shadow-[0_8px_20px_rgba(255,107,0,0.3)] transition-transform active:scale-95 flex items-center justify-center gap-2">
+                        <span class="text-base">➕</span> Order More
+                    </a>
+                </div>
+            </div>
+        <% } %>
+
         <!-- Order Summary -->
-        <div class="mb-6 animate-fade-in" style="animation-delay: 0.1s;">
+        <div class="mb-6 animate-fade-in" style="animation-delay: 0.2s;">
             <h3 class="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-3 px-1">Order Summary</h3>
             <div class="bg-[#11141E] border border-white/[0.04] rounded-2xl p-4 shadow-sm flex flex-col gap-3">
                 
-                <!-- Item List -->
                 <% order.items.forEach(item => { %>
                     <div class="flex justify-between items-center pb-3 border-b border-white/[0.04] last:border-0 last:pb-0">
                         <div>
@@ -75,7 +95,6 @@
                     </div>
                 <% }) %>
                 
-                <!-- Bill Breakdown -->
                 <div class="border-t border-dashed border-white/10 pt-3.5 mt-1 text-[13px] space-y-2.5">
                     <div class="flex justify-between items-center text-gray-300 font-medium">
                         <span>Subtotal</span>
@@ -84,7 +103,7 @@
                     
                     <% if (order.discountApplied && order.discountApplied > 0) { %>
                         <div class="flex justify-between items-center text-emerald-400 font-bold">
-                            <span>Discount Applied</span>
+                            <span>Promo Discount</span>
                             <span>-₹<%= order.discountApplied %></span>
                         </div>
                     <% } %>
@@ -96,61 +115,49 @@
                 </div>
             </div>
         </div>
-        
-        <!-- DYNAMIC SECTIONS BASED ON STATUS -->
-        <% if (order.orderStatus === 'Pending') { %>
-            <div class="bg-gradient-primary rounded-2xl p-6 shadow-[0_8px_25px_rgba(255,107,0,0.25)] text-center text-white mb-6 animate-fade-in border border-orange-400/30" style="animation-delay: 0.2s;">
-                <p class="text-[13px] font-medium text-white/90 mb-4">Payment verified via Razorpay (#<%= order._id.toString().slice(-6) %>)</p>
 
-                <a href="/receipt/<%= order._id %>" target="_blank" onclick="if(navigator.vibrate) navigator.vibrate(15)" class="inline-flex items-center justify-center gap-2 bg-white text-[#FF6B00] font-extrabold text-[13px] py-3 px-6 rounded-xl shadow-sm active:scale-95 transition-transform uppercase tracking-wider w-full">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Download Receipt
-                </a>
-            </div>
-        <% } %>
-
+        <!-- DIGITAL RECEIPT & RATING (Shows when served) -->
         <% if (order.orderStatus === 'Served') { %>
-            <div class="text-center mb-6 animate-fade-in" style="animation-delay: 0.2s;">
+            <div class="text-center mb-6 animate-fade-in" style="animation-delay: 0.3s;">
                 <div class="text-[40px] mb-2 inline-block animate-bounce" style="animation-duration: 2s;">🎉</div>
                 <h2 class="text-[22px] font-black tracking-tight mb-5">Enjoy your meal!</h2>
                 
-                <div class="bg-gradient-primary rounded-2xl p-5 shadow-[0_8px_25px_rgba(255,107,0,0.25)] text-center text-white border border-orange-400/30">
-                    <a href="/receipt/<%= order._id %>" target="_blank" onclick="if(navigator.vibrate) navigator.vibrate(15)" class="inline-flex items-center justify-center gap-2 bg-white text-[#FF6B00] font-extrabold text-[13px] py-2.5 px-6 rounded-xl shadow-sm active:scale-95 transition-transform uppercase tracking-wider mb-5">
+                <div class="bg-gradient-primary rounded-[2rem] p-6 shadow-[0_15px_30px_rgba(255,107,0,0.3)] text-center text-white border border-orange-400/30">
+                    <a href="/receipt/<%= order._id %>" target="_blank" onclick="if(navigator.vibrate) navigator.vibrate(15)" class="inline-flex items-center justify-center gap-2 bg-white text-[#FF6B00] font-extrabold text-[13px] py-3.5 px-6 rounded-xl shadow-md active:scale-95 transition-transform uppercase tracking-wider mb-6 w-full">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Download Receipt
                     </a>
 
                     <% if (!order.rating) { %>
-                        <div class="bg-black/20 rounded-xl p-4 backdrop-blur-md border border-white/10">
+                        <div class="bg-black/20 rounded-2xl p-5 backdrop-blur-md border border-white/10 shadow-inner">
                             <h3 class="font-extrabold text-[14px] mb-4 tracking-wide">How was the food?</h3>
                             <form action="/order/rate" method="POST">
                                 <input type="hidden" name="orderId" value="<%= order._id %>">
                                 
-                                <!-- Premium Star Rating -->
                                 <div class="flex justify-center gap-6 mb-5">
                                     <label class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-90 transition-transform">
                                         <span class="text-[28px]">😡</span>
-                                        <div class="flex items-center gap-1 text-[12px] font-bold"><input type="radio" name="rating" value="1" required class="accent-[#FF6B00] w-3.5 h-3.5"> 1</div>
+                                        <div class="flex items-center gap-1 text-[12px] font-bold"><input type="radio" name="rating" value="1" required class="accent-[#FF6B00] w-4 h-4"> 1</div>
                                     </label>
                                     <label class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-90 transition-transform">
                                         <span class="text-[28px]">😐</span>
-                                        <div class="flex items-center gap-1 text-[12px] font-bold"><input type="radio" name="rating" value="3" class="accent-[#FF6B00] w-3.5 h-3.5"> 3</div>
+                                        <div class="flex items-center gap-1 text-[12px] font-bold"><input type="radio" name="rating" value="3" class="accent-[#FF6B00] w-4 h-4"> 3</div>
                                     </label>
                                     <label class="flex flex-col items-center gap-1.5 cursor-pointer active:scale-90 transition-transform">
                                         <span class="text-[28px]">😍</span>
-                                        <div class="flex items-center gap-1 text-[12px] font-bold"><input type="radio" name="rating" value="5" class="accent-[#FF6B00] w-3.5 h-3.5"> 5</div>
+                                        <div class="flex items-center gap-1 text-[12px] font-bold"><input type="radio" name="rating" value="5" class="accent-[#FF6B00] w-4 h-4"> 5</div>
                                     </label>
                                 </div>
                                 
-                                <textarea name="comment" rows="2" placeholder="Leave a comment (optional)..." class="w-full bg-[#161A26] border border-transparent rounded-xl p-3 text-[13px] text-white focus:outline-none focus:border-white/30 transition-all mb-3 placeholder-white/40 shadow-inner"></textarea>
+                                <textarea name="comment" rows="2" placeholder="Leave a comment (optional)..." class="w-full bg-[#161A26] border border-transparent rounded-xl p-3 text-[13px] text-white focus:outline-none focus:border-white/30 transition-all mb-4 placeholder-white/40 shadow-inner resize-none"></textarea>
                                 
-                                <button type="submit" onclick="if(navigator.vibrate) navigator.vibrate(20)" class="w-full bg-white text-[#FF6B00] font-extrabold text-[14px] py-3 rounded-xl shadow-sm active:scale-95 transition-transform uppercase tracking-wider">
+                                <button type="submit" onclick="if(navigator.vibrate) navigator.vibrate(20)" class="w-full bg-white text-[#FF6B00] font-extrabold text-[14px] py-3.5 rounded-xl shadow-sm active:scale-95 transition-transform uppercase tracking-wider">
                                     Submit Feedback
                                 </button>
                             </form>
                         </div>
                     <% } else { %>
-                        <div class="bg-black/20 rounded-xl p-5 backdrop-blur-md border border-white/10 mt-2">
+                        <div class="bg-black/20 rounded-2xl p-5 backdrop-blur-md border border-white/10 mt-2 shadow-inner">
                             <h3 class="font-black text-[16px] text-[#FFD700]">You rated: <%= order.rating %> ⭐</h3>
                             <% if(order.comment) { %><p class="text-[13px] font-medium text-white/90 italic mt-2.5">"<%= order.comment %>"</p><% } %>
                             <p class="text-[11px] font-extrabold uppercase tracking-widest text-white/60 mt-4">Thank you for your feedback!</p>
@@ -161,7 +168,7 @@
         <% } %>
         
         <!-- Refresh Button -->
-        <button onclick="if(navigator.vibrate) navigator.vibrate(15); window.location.reload()" class="w-full bg-[#11141E] hover:bg-[#161A26] active:scale-[0.98] border border-white/[0.04] text-white font-bold text-[14px] py-3.5 rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 animate-fade-in" style="animation-delay: 0.3s;">
+        <button onclick="if(navigator.vibrate) navigator.vibrate(15); window.location.reload()" class="mt-6 w-full bg-[#11141E] hover:bg-[#161A26] active:scale-[0.98] border border-white/[0.04] text-white font-bold text-[13px] py-3.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 animate-fade-in uppercase tracking-wider" style="animation-delay: 0.4s;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
             Refresh Status
         </button>
@@ -174,23 +181,59 @@
         const orderId = '<%= order._id %>';
         const statusEl = document.getElementById('liveStatus');
 
-        // Join the specific room for this order
         socket.emit('joinOrderRoom', orderId);
 
-        // Listen for updates from the kitchen!
         socket.on('statusUpdated', (newStatus) => {
             statusEl.innerText = newStatus;
             
-            // Visual feedback based on status
             if(newStatus === 'Preparing') {
-                statusEl.className = "text-[32px] font-black text-yellow-400 leading-none tracking-tight relative z-10 animate-pulse pb-1";
+                statusEl.className = "text-[32px] font-black text-yellow-400 leading-none tracking-tight relative z-10 animate-pulse pb-1 drop-shadow-md";
             } else if (newStatus === 'Ready') {
-                statusEl.className = "text-[32px] font-black text-emerald-400 leading-none tracking-tight relative z-10 animate-bounce pb-1";
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200]); // Haptic feedback when food is ready
-            } else {
-                statusEl.className = "text-[32px] font-black text-[#FF6B00] leading-none tracking-tight relative z-10 animate-pulse pb-1";
+                statusEl.className = "text-[32px] font-black text-emerald-400 leading-none tracking-tight relative z-10 animate-bounce pb-1 drop-shadow-md";
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]); 
+            } else if (newStatus === 'Served') {
+                window.location.reload(); // Reload to show the receipt UI!
             }
         });
+
+        // --- 2-MINUTE TIMER LOGIC ---
+        const createdAt = new Date('<%= order.createdAt %>').getTime();
+        const timerDisplay = document.getElementById('timerDisplay');
+        const editOrderBtn = document.getElementById('editOrderBtn');
+        let isExpired = false;
+
+        if (timerDisplay) {
+            const interval = setInterval(() => {
+                const now = new Date().getTime();
+                const diff = now - createdAt;
+                const timeLeft = (2 * 60 * 1000) - diff; // 2 minutes
+
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    timerDisplay.innerText = "00:00";
+                    timerDisplay.className = "font-mono text-lg font-black text-red-500 bg-red-500/10 px-3 py-1.5 rounded-xl border border-red-500/20 transition-colors shadow-inner";
+                    
+                    if(editOrderBtn) {
+                        editOrderBtn.classList.add('opacity-40');
+                        editOrderBtn.classList.remove('hover:bg-white/5');
+                    }
+                    isExpired = true;
+                } else {
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    timerDisplay.innerText = `0${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                }
+            }, 1000);
+        }
+
+        // Edit Warning Modal
+        function handleEditClick() {
+            if (isExpired) {
+                alert("⏳ The 2-minute window has passed.\n\nYour food is already being prepared. Please contact the manager at the counter to request any changes.");
+            } else {
+                alert("✅ You are within the 2-minute window!\n\nPlease quickly call the waiter or go to the counter to update your items, as your payment has already been processed.");
+            }
+        }
     </script>
 </body>
 </html>

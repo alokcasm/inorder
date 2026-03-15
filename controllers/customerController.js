@@ -18,47 +18,39 @@ exports.getMenu = async (req, res) => {
         const table = await Table.findById(tableId).populate('vendorId');
         if (!table) return res.status(404).send('Table not found');
 
-        // Check if table is occupied
-        // Check if table is occupied
         const activeOrder = await Order.findOne({
             vendorId: table.vendorId._id,
             tableNumber: table.tableNumber,
             orderStatus: { $in: ['Pending', 'Preparing', 'Ready'] } 
         });
 
-        // 🚨 NEW LOGIC: Is the table occupied?
         if (activeOrder) {
-            // Did THIS specific user place the order?
+            // Check if THIS user placed the order
             if (req.session.activeOrderId && req.session.activeOrderId === activeOrder._id.toString()) {
-                // It's their order! Redirect them straight to the tracking screen.
-                return res.redirect(`/track/${activeOrder._id}`);
+                // If they clicked "Order More Food", let them see the menu!
+                if (req.query.addMore === 'true') {
+                    // Allow them to pass through
+                } else {
+                    return res.redirect(`/track/${activeOrder._id}`);
+                }
             } else {
-                // It's someone else's order. Show the "Occupied" screen.
-                return res.render('customer/occupied', { 
-                    tableNumber: table.tableNumber, 
-                    shopName: table.vendorId.shopName 
-                });
+                return res.render('customer/occupied', { tableNumber: table.tableNumber, shopName: table.vendorId.shopName });
             }
         }
 
-        // NEW: If user hasn't entered name/phone, show the Welcome Animation Screen
         if (!req.session.customerPhone) {
             return res.render('customer/welcome', { table, vendor: table.vendorId });
         }
 
-        const items = await Item.find({ vendorId: table.vendorId._id, isAvailable: true }).sort({ orderCount: -1 }); // Sort by most popular
+        const items = await Item.find({ vendorId: table.vendorId._id, isAvailable: true }).sort({ orderCount: -1 });
         if (!req.session.cart) req.session.cart = [];
 
         res.render('customer/menu', { 
-            table, 
-            vendor: table.vendorId, 
-            items, 
-            cart: req.session.cart,
-            customerName: req.session.customerName // Pass name to view
+            table, vendor: table.vendorId, items, 
+            cart: req.session.cart, customerName: req.session.customerName 
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
+        console.error(error); res.status(500).send('Server Error');
     }
 };
 
@@ -174,13 +166,15 @@ exports.trackOrder = async (req, res) => {
         
         if (!order) return res.status(404).send('Order not found');
 
-        res.render('customer/track', { order, vendor: order.vendorId });
+        // We need to fetch the Table ID so they can "Order More Food"
+        const TableModel = require('../models/Table');
+        const table = await TableModel.findOne({ vendorId: order.vendorId._id, tableNumber: order.tableNumber });
+
+        res.render('customer/track', { order, vendor: order.vendorId, tableId: table._id });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
+        console.error(error); res.status(500).send('Server Error');
     }
 };
-
 
 // 4. Verify Razorpay Payment Signature
 exports.verifyPayment = async (req, res) => {
