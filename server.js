@@ -32,7 +32,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Session Setup (Vercel Compatible)
 app.use(session({
-    secret: process.env.SESSION_SECRET || "supersecret",
+    secret: process.env.SESSION_SECRET || "supersecret123",
     resave: false,
     saveUninitialized: false,
 
