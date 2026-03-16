@@ -3,18 +3,27 @@ const router = express.Router();
 const vendorController = require('../controllers/vendorController');
 const { isVendor } = require('../middleware/authMiddleware');
 const multer = require('multer');
-const path = require('path');
 
-// Set up Multer for Image Uploads
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/uploads/'); // Save files to public/uploads folder
-    },
-    filename: function (req, file, cb) {
-        // Give the file a unique name based on the current timestamp
-        cb(null, Date.now() + path.extname(file.originalname));
+// --- NEW CLOUDINARY UPLOAD LOGIC ---
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+// Configure Cloudinary with your .env keys
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Setup Cloudinary Storage for Multer
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'inOrder_uploads', // A folder will be created in your Cloudinary account
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp']
     }
 });
+
 const upload = multer({ storage: storage });
 
 // Protect all routes inside this file

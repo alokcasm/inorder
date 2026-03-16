@@ -73,8 +73,10 @@ exports.addItem = async (req, res) => {
         // Add dietType here:
         const { name, price, category, description, dietType } = req.body; 
         
-        let imagePath = '/uploads/default-food.png';
-        if (req.file) imagePath = '/uploads/' + req.file.filename;
+        let imagePath = 'https://via.placeholder.com/150?text=No+Image'; // Default cloud image
+        if (req.file) {
+            imagePath = req.file.path; // 🚨 Cloudinary gives us the full secure URL here!
+        }
 
         const newItem = new Item({
             vendorId: req.session.user.id,
@@ -154,18 +156,14 @@ exports.updateSettings = async (req, res) => {
     try {
         const { upiId, isOpen } = req.body;
         const shopStatus = isOpen === 'on' ? true : false; 
-
         // Prepare the data to update
         let updateData = { upiId, isOpen: shopStatus };
 
-        // Check if Aadhar was uploaded
         if (req.files && req.files.aadhar) {
-            updateData.aadharImage = '/uploads/' + req.files.aadhar[0].filename;
+            updateData.aadharImage = req.files.aadhar[0].path; // 🚨 Save Cloudinary URL
         }
-
-        // Check if PAN was uploaded
         if (req.files && req.files.pan) {
-            updateData.panImage = '/uploads/' + req.files.pan[0].filename;
+            updateData.panImage = req.files.pan[0].path; // 🚨 Save Cloudinary URL
         }
 
         await User.findByIdAndUpdate(req.session.user.id, updateData);
@@ -225,9 +223,11 @@ exports.editItem = async (req, res) => {
         // Add dietType here:
         const { name, price, offerPrice, category, dietType } = req.body;
         
-        let updateData = { name, price, offerPrice: offerPrice || null, category, dietType };
+         let updateData = { name, price, offerPrice: offerPrice || null, category, dietType };
         
-        if (req.file) updateData.image = '/uploads/' + req.file.filename;
+        if (req.file) {
+            updateData.image = req.file.path; // 🚨 Update with new Cloudinary URL
+        }
 
         await Item.findByIdAndUpdate(req.params.id, updateData);
         res.redirect('/vendor/menu');
