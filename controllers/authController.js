@@ -1,5 +1,15 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer'); // 🚨 NEW
+
+// Configure Nodemailer Transporter
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 // Render Pages
 exports.getLoginPage = (req, res) => {
@@ -13,36 +23,95 @@ exports.getRegisterPage = (req, res) => {
 };
 
 // Handle Registration
-exports.registerVendor = async (req, res) => {
+// 1. Step 1: Generate & Send OTP via Email
+exports.sendOtp = async (req, res) => {
     try {
-        const { name, phone, password, shopName } = req.body;
+        const { name, shopName, phone, email, password } = req.body;
+        const User = require('../models/User');
+        const bcrypt = require('bcryptjs');
 
-        // Check if user already exists
-        const existingUser = await User.findOne({ phone });
+        // Check if user exists
+        const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
         if (existingUser) {
-            return res.render('auth/register', { error: 'Phone number already registered' });
+            return res.render('auth/register', { error: 'Phone or Email already registered' });
         }
 
-        // Hash Password
+        // Generate OTP
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+        console.log(`\n========================================`);
+        console.log(`📱 OTP for ${shopName} (${phone}) is: ${otp}`);
+        console.log(`========================================\n`);
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create new Vendor (Approved by default for testing purposes)
+        // Save data temporarily in the session
+        req.session.tempVendor = { name, email, phone, password: hashedPassword, shopName, otp };
+
+        // 🚨 THE FIX: Force the session to save to MongoDB BEFORE redirecting!
+        req.session.save((err) => {
+            if (err) {
+                console.error("Session Save Error:", err);
+                return res.render('auth/register', { error: 'Error saving session. Try again.' });
+            }
+            console.log("✅ Session saved successfully. Redirecting to /register/verify...");
+            res.redirect('/register/verify');
+        });
+
+    } catch (error) {
+        console.error("sendOtp Error:", error);
+        res.render('auth/register', { error: 'Error sending OTP. Please try again.' });
+    }
+};
+
+
+// 2. Step 2: Show OTP Verification Page
+exports.getVerifyPage = (req, res) => {
+    console.log("Checking session on /register/verify:", req.session.tempVendor); // Debugging
+    
+    // If no session data, they didn't fill the first form!
+    if (!req.session.tempVendor) {
+        console.log("❌ No tempVendor session found. Redirecting to /register.");
+        return res.redirect('/register');
+    }
+    
+    // Session exists! Show the OTP page.
+    res.render('auth/verify-otp', { error: null, email: req.session.tempVendor.email, phone: req.session.tempVendor.phone });
+};
+
+// 3. Step 3: Check OTP and Save Vendor
+exports.verifyOtp = async (req, res) => {
+    try {
+        const { otp } = req.body;
+        const tempData = req.session.tempVendor;
+
+        if (!tempData) return res.redirect('/register');
+
+        // Check if OTP matches
+        if (otp !== tempData.otp) {
+            return res.render('auth/verify-otp', { error: 'Invalid OTP. Please try again.', email: tempData.email });
+        }
+
+        // OTP matches! Create the real Vendor account
         const newVendor = new User({
-            name,
-            phone,
-            password: hashedPassword,
-            shopName,
+            name: tempData.name,
+            email: tempData.email, // Save email to DB
+            phone: tempData.phone,
+            password: tempData.password,
+            shopName: tempData.shopName,
             role: 'vendor',
             isApproved: false 
         });
 
         await newVendor.save();
+        
+        req.session.tempVendor = null;
         res.redirect('/login');
 
     } catch (error) {
         console.error(error);
-        res.render('auth/register', { error: 'Server error during registration' });
+        res.render('auth/verify-otp', { error: 'Server error during verification', email: '' });
     }
 };
 

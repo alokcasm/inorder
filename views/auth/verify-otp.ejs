@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Verify Account - inOrder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #07090F; 
+            color: #ffffff; 
+        }
+        
+        .bg-gradient-primary { background-image: linear-gradient(135deg, #FF6B00, #FF3D3D); }
+        
+        /* Smooth fade in animation */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+        /* Custom tracking for OTP input to space numbers perfectly */
+        .otp-input { letter-spacing: 0.8em; text-indent: 0.8em; }
+    </style>
+</head>
+<body class="antialiased flex items-center justify-center min-h-screen relative overflow-hidden selection:bg-orange-500/30 py-10 px-4">
+    
+    <!-- Ambient Background Glows -->
+    <div class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-orange-600/10 blur-[100px] pointer-events-none z-[-1]"></div>
+    <div class="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-red-600/10 blur-[100px] pointer-events-none z-[-1]"></div>
+
+    <!-- Main Card Wrapper -->
+    <div class="w-full max-w-[420px] z-10 animate-fade-in">
+        
+        <!-- Premium UI Card -->
+        <div class="bg-[#11141E] border border-white/[0.04] rounded-[32px] p-8 sm:p-10 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+            
+            <!-- Top Inner Glow -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-orange-500/5 to-transparent pointer-events-none"></div>
+
+            <!-- Icon Header -->
+            <div class="relative z-10 text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-[20px] bg-[#161A26] border border-white/5 mb-5 shadow-inner relative">
+                    <!-- Security/Lock Icon -->
+                    <svg class="w-8 h-8 text-[#FF6B00]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <!-- Small green verified dot -->
+                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-[#11141E] rounded-full"></div>
+                </div>
+                
+                <h1 class="text-[26px] font-black tracking-tight text-white leading-tight mb-2">Verify Account</h1>
+                
+                <!-- Cleanly combined phone & email info -->
+                <p class="text-gray-400 text-[14px] font-medium leading-relaxed">
+                    Enter the 4-digit security code sent to <br>
+                    <span class="text-white font-bold"><%= phone %></span> & <span class="text-white font-bold"><%= email %></span>
+                </p>
+            </div>
+
+            <!-- Error Message Box -->
+            <% if (error) { %>
+                <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-[13px] px-4 py-3 rounded-xl mb-6 text-center font-bold relative z-10 flex items-center justify-center gap-2 shadow-sm">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <!-- Verification Form -->
+            <form action="/register/verify" method="POST" class="space-y-6 relative z-10">
+                
+                <!-- OTP Input field -->
+                <div class="relative">
+                    <input type="text" name="otp" required maxlength="4" autocomplete="one-time-code" autofocus
+                           class="otp-input w-full bg-[#07090F] border border-white/5 rounded-[20px] px-4 py-4 text-white text-center text-[36px] font-black focus:outline-none focus:border-orange-500/40 focus:bg-[#161A26] transition-all shadow-inner placeholder-gray-700" 
+                           placeholder="••••">
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="w-full bg-gradient-primary text-white font-black text-[15px] rounded-2xl py-4.5 shadow-[0_8px_25px_rgba(255,107,0,0.3)] hover:shadow-[0_12px_30px_rgba(255,107,0,0.4)] transition-all active:scale-[0.98] border border-orange-400/30 uppercase tracking-widest h-[56px] flex items-center justify-center">
+                    Verify & Create Account
+                </button>
+            </form>
+            
+            <!-- Bottom Action Link -->
+            <div class="text-center mt-8 relative z-10">
+                <p class="text-[13px] font-bold text-gray-500">
+                    Entered wrong details? <br>
+                    <a href="/register" class="text-orange-500 hover:text-orange-400 transition-colors inline-block mt-1.5 underline decoration-orange-500/30 underline-offset-4">Change Phone / Email</a>
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
