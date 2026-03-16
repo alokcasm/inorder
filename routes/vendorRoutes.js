@@ -38,4 +38,7 @@ router.get('/reports', vendorController.getReports);
 router.post('/coupon/add', vendorController.addCoupon);
 router.post('/coupon/delete/:id', vendorController.deleteCoupon);
 
+router.post('/menu/toggle-stock/:id', vendorController.toggleStock);
+router.post('/table/delete/:id', vendorController.deleteTable);
+
 module.exports = router;

@@ -27,11 +27,27 @@ app.use(express.urlencoded({ extended: true })); // To parse form data
 app.use(express.static(path.join(__dirname, 'public'))); // Serve static files (CSS, JS, Images)
 
 // Session Setup (For Login states and Customer Carts)
+const MongoStore = require('connect-mongo');
+
+// 1. Trust Vercel's proxy (required for secure cookies on Vercel)
+app.set('trust proxy', 1);
+
+// 2. Update Session Configuration
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 24 } // 1 day cookie
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URI, // Saves sessions to your MongoDB
+        collectionName: 'sessions',      // Creates a new 'sessions' collection in your DB
+        ttl: 24 * 60 * 60                // 1 day lifetime
+    }),
+    cookie: { 
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
+        // Secure must be true on Vercel (HTTPS), false on Localhost (HTTP)
+        secure: process.env.NODE_ENV === 'production', 
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    }
 }));
 
 // Pass socket.io to the request object so we can use it inside our routes

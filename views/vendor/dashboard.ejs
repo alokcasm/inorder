@@ -34,7 +34,7 @@
             
             <!-- Desktop Links -->
             <div class="hidden lg:flex items-center gap-6">
-                <a href="/vendor/dashboard" class="text-orange-500 font-bold drop-shadow-[0_0_8px_rgba(255,107,0,0.5)]">Live Orders</a>
+                <a href="/vendor/dashboard" class="text-orange-500 font-medium">Live Orders</a>
                 <a href="/vendor/menu" class="text-gray-400 hover:text-white font-medium transition">Menu & QR</a>
                 <a href="/vendor/reports" class="text-gray-400 hover:text-white font-medium transition">Reports</a>
                 <a href="/vendor/settings" class="text-gray-400 hover:text-white font-medium transition">Settings</a>
@@ -197,22 +197,28 @@
                             </div>
                             
                             <!-- Dynamic Forms based on status -->
-                            <form action="/vendor/order/update" method="POST">
+                            <form action="/vendor/order/update" method="POST" class="flex gap-2">
                                 <input type="hidden" name="orderId" value="<%= order._id %>">
                                 
                                 <% if(order.orderStatus === 'Pending') { %>
-                                    <input type="hidden" name="status" value="Preparing">
-                                    <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-[0_5px_15px_rgba(255,107,0,0.3)] transition-transform active:scale-95 text-sm tracking-wide">
+                                    <!-- CANCEL BUTTON -->
+                                    <button type="submit" name="status" value="Cancelled" onclick="return confirm('Are you sure you want to cancel this order? You will need to manually refund the customer via Razorpay.');" class="bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold py-2.5 px-3 rounded-xl transition-transform active:scale-95 text-sm">
+                                        ❌
+                                    </button>
+                                    <button type="submit" name="status" value="Preparing" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-5 rounded-xl shadow-[0_5px_15px_rgba(255,107,0,0.3)] transition-transform active:scale-95 text-sm tracking-wide">
                                         Prepare
                                     </button>
                                 <% } else if(order.orderStatus === 'Preparing') { %>
-                                    <input type="hidden" name="status" value="Ready">
-                                    <button type="submit" class="bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-2.5 px-6 rounded-xl shadow-[0_5px_15px_rgba(250,204,21,0.3)] transition-transform active:scale-95 text-sm tracking-wide">
+                                    <!-- CANCEL BUTTON -->
+                                    <button type="submit" name="status" value="Cancelled" onclick="return confirm('Are you sure you want to cancel this order? You will need to manually refund the customer via Razorpay.');" class="bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold py-2.5 px-3 rounded-xl transition-transform active:scale-95 text-sm">
+                                        ❌
+                                    </button>
+                                    <button type="submit" name="status" value="Ready" class="bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-2.5 px-5 rounded-xl shadow-[0_5px_15px_rgba(250,204,21,0.3)] transition-transform active:scale-95 text-sm tracking-wide">
                                         Mark Ready
                                     </button>
                                 <% } else if(order.orderStatus === 'Ready') { %>
                                     <input type="hidden" name="status" value="Served">
-                                    <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-[0_5px_15px_rgba(16,185,129,0.3)] transition-transform active:scale-95 text-sm tracking-wide">
+                                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-[0_5px_15px_rgba(16,185,129,0.3)] transition-transform active:scale-95 text-sm tracking-wide">
                                         Served
                                     </button>
                                 <% } %>

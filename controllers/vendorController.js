@@ -274,3 +274,30 @@ exports.deleteCoupon = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
+// 10. Toggle Out of Stock
+exports.toggleStock = async (req, res) => {
+    try {
+        const item = await Item.findById(req.params.id);
+        if(item) {
+            // Flip the boolean value (true -> false, false -> true)
+            item.isAvailable = !item.isAvailable;
+            await item.save();
+        }
+        res.redirect('/vendor/menu');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
+    }
+};
+
+// 11. Delete Table QR
+exports.deleteTable = async (req, res) => {
+    try {
+        await Table.findByIdAndDelete(req.params.id);
+        res.redirect('/vendor/menu');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
+    }
+};

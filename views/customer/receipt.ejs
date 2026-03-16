@@ -3,96 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt - <%= order._id %></title>
+    <title>Receipt - <%= vendor.shopName %></title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Use a monospace font to make it look like a physical receipt -->
+    
+    <!-- Monospace font for that authentic POS receipt look -->
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
         body { 
             font-family: 'Courier Prime', monospace; 
             background-color: #f3f4f6; 
-            color: #000;
+            color: #000000;
         }
-        .receipt-container {
-            max-w: 400px;
-            margin: 20px auto;
-            background: #fff;
-            padding: 30px 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        .dashed-line { border-top: 2px dashed #000; margin: 15px 0; }
         
-        /* When the user clicks print, hide everything else and remove shadows */
+        .receipt-container {
+            max-w: 420px;
+            margin: 40px auto;
+            background: #ffffff;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        /* Zig-zag top and bottom borders to look like torn paper */
+        .receipt-container::before, .receipt-container::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background-size: 20px 20px;
+        }
+        .receipt-container::before {
+            top: -10px;
+            background-image: linear-gradient(135deg, #ffffff 50%, transparent 50%), linear-gradient(-135deg, #ffffff 50%, transparent 50%);
+        }
+        .receipt-container::after {
+            bottom: -10px;
+            background-image: linear-gradient(45deg, #ffffff 50%, transparent 50%), linear-gradient(-45deg, #ffffff 50%, transparent 50%);
+        }
+
+        .dashed-line { 
+            border-top: 2px dashed #333; 
+            margin: 20px 0; 
+        }
+        
+        /* ========================================================= */
+        /* PRINT STYLES - Hides backgrounds/buttons for PDF export */
+        /* ========================================================= */
         @media print {
-            body { background: #fff; margin: 0; padding: 0; }
-            .receipt-container { box-shadow: none; margin: 0; width: 100%; max-w: 100%; padding: 10px; }
-            #printBtn { display: none; }
+            body { background: #ffffff; margin: 0; padding: 0; }
+            .receipt-container { 
+                box-shadow: none; 
+                margin: 0 auto; 
+                width: 100%; 
+                max-w: 350px; /* Standard POS printer width */
+                padding: 10px; 
+            }
+            .receipt-container::before, .receipt-container::after { display: none; }
+            #printBtn { display: none !important; }
         }
     </style>
 </head>
 <body>
 
     <div class="receipt-container">
-        <!-- Header -->
-        <div class="text-center mb-6">
-            <h1 class="text-2xl font-bold uppercase"><%= vendor.shopName %></h1>
-            <p class="text-sm mt-1">Table No: <%= order.tableNumber %></p>
-            <p class="text-xs mt-1">Date: <%= new Date(order.createdAt).toLocaleString() %></p>
-            <p class="text-xs">Order ID: #<%= order._id.toString().slice(-6).toUpperCase() %></p>
+        
+        <!-- Store Info Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold uppercase tracking-wider"><%= vendor.shopName %></h1>
+            
+            <% if (vendor.shopAddress) { %>
+                <p class="text-sm mt-2 font-bold max-w-[250px] mx-auto leading-tight"><%= vendor.shopAddress %></p>
+            <% } %>
+            
+            <div class="mt-4 text-xs font-bold leading-relaxed">
+                <p>Table No: <%= tableNumber %></p>
+                <p>Date: <%= new Date(date).toLocaleString() %></p>
+                <p>Order Ref: #<%= latestOrderId.slice(-6).toUpperCase() %></p>
+            </div>
         </div>
 
         <div class="dashed-line"></div>
 
-        <!-- Items -->
-        <div class="w-full text-sm space-y-2">
-            <div class="flex justify-between font-bold mb-2">
+        <!-- Itemized List -->
+        <div class="w-full text-sm space-y-3 font-bold">
+            <div class="flex justify-between mb-4 border-b border-black pb-2">
                 <span>ITEM (QTY)</span>
                 <span>AMOUNT</span>
             </div>
-            <% order.items.forEach(item => { %>
-                <div class="flex justify-between">
-                    <span class="pr-4"><%= item.name %> (x<%= item.quantity %>)</span>
-                    <span>₹<%= item.price * item.quantity %></span>
+            
+            <% combinedItems.forEach(item => { %>
+                <div class="flex justify-between items-start leading-tight">
+                    <span class="pr-4 flex-1">
+                        <%= item.name %>
+                        <span class="text-xs font-normal ml-1">(x<%= item.quantity %>)</span>
+                    </span>
+                    <span class="shrink-0">₹<%= item.price * item.quantity %></span>
                 </div>
             <% }) %>
         </div>
 
         <div class="dashed-line"></div>
 
-         <!-- Totals -->
-        <div class="text-right space-y-1">
-            <p class="text-sm">SUBTOTAL: ₹<%= order.totalAmount %></p>
+        <!-- Billing Math -->
+        <div class="text-right space-y-2 font-bold">
+            <div class="flex justify-between">
+                <span>SUBTOTAL</span>
+                <span>₹<%= combinedSubTotal %></span>
+            </div>
             
-            <% if (order.discountApplied && order.discountApplied > 0) { %>
-                <p class="text-sm font-bold">DISCOUNT: -₹<%= order.discountApplied %></p>
+            <% if (combinedDiscount > 0) { %>
+                <div class="flex justify-between text-gray-600">
+                    <span>DISCOUNT</span>
+                    <span>-₹<%= combinedDiscount %></span>
+                </div>
             <% } %>
             
-            <div class="dashed-line"></div>
-            <!-- USE FINAL AMOUNT HERE -->
-            <p class="text-xl font-bold">GRAND TOTAL: ₹<%= order.finalAmount || order.totalAmount %></p>
-            <p class="text-sm uppercase">PAID VIA: <%= order.paymentMethod %></p>
+            <!-- Taxes can be added here in the future -->
         </div>
 
         <div class="dashed-line"></div>
 
-        <!-- Footer -->
-        <div class="text-center mt-6">
-            <p class="text-sm font-bold">Thank you for dining with us!</p>
-            <p class="text-xs mt-2">Powered by InOrder</p>
+        <!-- Grand Total -->
+        <div class="flex justify-between items-end font-bold mb-4">
+            <span class="text-lg">GRAND TOTAL</span>
+            <span class="text-2xl">₹<%= combinedFinal %></span>
+        </div>
+        
+        <div class="flex justify-between text-sm font-bold border-t border-black pt-2">
+            <span>PAID VIA</span>
+            <span class="uppercase"><%= paymentMethod %></span>
         </div>
 
-        <!-- Print Button (Hidden during actual printing) -->
-        <button id="printBtn" onclick="window.print()" class="w-full mt-8 bg-black text-white font-bold py-3 rounded uppercase tracking-widest hover:bg-gray-800 transition">
-            Print / Save as PDF
+        <!-- Footer -->
+        <div class="text-center mt-12 space-y-2">
+            <p class="text-sm font-bold uppercase tracking-widest">Thank you for dining!</p>
+            <p class="text-[10px] text-gray-500 font-bold">Powered by InOrder</p>
+        </div>
+
+        <!-- Print Action Button (Will not appear on the actual PDF/Paper) -->
+        <button id="printBtn" onclick="window.print()" class="w-full mt-10 bg-[#FF6B00] text-white font-bold py-4 rounded-xl shadow-lg uppercase tracking-widest hover:bg-orange-600 hover:-translate-y-0.5 active:scale-95 transition-all flex justify-center items-center gap-2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Save as PDF
         </button>
+        
     </div>
 
-    <!-- Automatically open the print dialog when page loads -->
+    <!-- Automatically trigger the print prompt for better UX -->
     <script>
         window.onload = function() {
             setTimeout(() => {
                 window.print();
-            }, 500);
+            }, 800); // Slight delay ensures fonts and layout load perfectly before printing
         }
     </script>
 </body>

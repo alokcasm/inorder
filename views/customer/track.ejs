@@ -51,8 +51,17 @@
                 <%= order.orderStatus %>
             </h2>
             
-            <p class="text-[11px] font-medium text-gray-400 mt-4 relative z-10">Order ID: #<%= order._id.toString().slice(-6).toUpperCase() %></p>
+            <p class="text-[11px] font-medium text-gray-400 mt-4 relative z-10">Latest Order ID: #<%= order._id.toString().slice(-6).toUpperCase() %></p>
         </div>
+
+        <!-- SERVER-SIDE TIME CALCULATION -->
+        <% 
+            const serverNow = new Date().getTime();
+            const orderTime = new Date(firstOrderTime).getTime(); 
+            let remainingSeconds = Math.floor((120000 - (serverNow - orderTime)) / 1000);
+            if (remainingSeconds < 0) remainingSeconds = 0;
+            const isTimerExpired = remainingSeconds === 0;
+        %>
 
         <!-- ⏱️ 2-MINUTE GRACE PERIOD & ACTIONS -->
         <% if (order.orderStatus === 'Pending' || order.orderStatus === 'Preparing') { %>
@@ -64,28 +73,41 @@
                         <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Grace period remaining</p>
                     </div>
                     <div class="text-right">
-                        <span id="timerDisplay" class="font-mono text-lg font-black text-[#FF6B00] bg-[#FF6B00]/10 px-3 py-1.5 rounded-xl border border-[#FF6B00]/20 transition-colors shadow-inner">02:00</span>
+                        <span id="timerDisplay" class="font-mono text-lg font-black <%= isTimerExpired ? 'text-red-500 bg-red-500/10 border-red-500/20' : 'text-[#FF6B00] bg-[#FF6B00]/10 border-[#FF6B00]/20' %> px-3 py-1.5 rounded-xl border transition-colors shadow-inner">
+                            <%= isTimerExpired ? '00:00' : '02:00' %>
+                        </span>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="flex gap-3 mb-6">
-                    <button id="editOrderBtn" onclick="handleEditClick()" class="flex-1 bg-[#11141E] hover:bg-white/5 text-white text-[12px] font-bold py-3.5 rounded-xl border border-white/[0.05] transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2">
+                <!-- Action Buttons Container (FIXED: Included IDs and Receipt Button) -->
+                <div class="flex gap-3 mb-6 w-full" id="actionButtonsContainer">
+                    
+                    <!-- EDIT BUTTON (Hides if timer expired) -->
+                    <button id="editOrderBtn" onclick="handleEditClick()" class="<%= isTimerExpired ? 'hidden' : 'flex' %> flex-1 bg-[#11141E] hover:bg-white/5 text-white text-[12px] font-bold py-3.5 rounded-xl border border-white/[0.05] transition-all shadow-sm active:scale-95 items-center justify-center gap-2">
                         <span class="text-base">✏️</span> Edit Items
                     </button>
-                    <a href="/t/<%= tableId %>?addMore=true" class="flex-1 bg-gradient-primary text-white text-center text-[12px] font-bold py-3.5 rounded-xl shadow-[0_8px_20px_rgba(255,107,0,0.3)] transition-transform active:scale-95 flex items-center justify-center gap-2">
+                    
+                    <!-- ORDER MORE BUTTON (Hides if timer expired) -->
+                    <a id="orderMoreBtn" href="/t/<%= tableId %>?addMore=true" class="<%= isTimerExpired ? 'hidden' : 'flex' %> flex-1 bg-gradient-primary text-white text-center text-[12px] font-bold py-3.5 rounded-xl shadow-[0_8px_20px_rgba(255,107,0,0.3)] transition-transform active:scale-95 items-center justify-center gap-2">
                         <span class="text-base">➕</span> Order More
                     </a>
+
+                    <!-- RECEIPT BUTTON (Shows ONLY if timer expired. Takes full width) -->
+                    <a id="earlyReceiptBtn" href="/receipt/<%= order._id %>" target="_blank" onclick="if(navigator.vibrate) navigator.vibrate(15)" class="<%= isTimerExpired ? 'flex' : 'hidden' %> w-full bg-white text-[#FF6B00] text-[12px] font-extrabold py-3.5 rounded-xl border border-white/[0.05] transition-all shadow-sm active:scale-95 items-center justify-center gap-2 uppercase tracking-wide">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Download Receipt
+                    </a>
+
                 </div>
             </div>
         <% } %>
 
-        <!-- Order Summary -->
+        <!-- Order Summary (COMBINED BILL) -->
         <div class="mb-6 animate-fade-in" style="animation-delay: 0.2s;">
-            <h3 class="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-3 px-1">Order Summary</h3>
+            <h3 class="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-3 px-1">Complete Order Summary</h3>
             <div class="bg-[#11141E] border border-white/[0.04] rounded-2xl p-4 shadow-sm flex flex-col gap-3">
                 
-                <% order.items.forEach(item => { %>
+                <% combinedItems.forEach(item => { %>
                     <div class="flex justify-between items-center pb-3 border-b border-white/[0.04] last:border-0 last:pb-0">
                         <div>
                             <h4 class="text-[14px] font-bold text-white leading-snug mb-0.5"><%= item.name %></h4>
@@ -98,31 +120,33 @@
                 <div class="border-t border-dashed border-white/10 pt-3.5 mt-1 text-[13px] space-y-2.5">
                     <div class="flex justify-between items-center text-gray-300 font-medium">
                         <span>Subtotal</span>
-                        <span class="text-white font-bold">₹<%= order.totalAmount %></span>
+                        <span class="text-white font-bold">₹<%= combinedSubTotal %></span>
                     </div>
                     
-                    <% if (order.discountApplied && order.discountApplied > 0) { %>
+                    <% if (combinedDiscount > 0) { %>
                         <div class="flex justify-between items-center text-emerald-400 font-bold">
                             <span>Promo Discount</span>
-                            <span>-₹<%= order.discountApplied %></span>
+                            <span>-₹<%= combinedDiscount %></span>
                         </div>
                     <% } %>
 
                     <div class="border-t border-white/[0.04] pt-3 mt-1.5 flex justify-between items-end">
-                        <span class="text-[13px] font-bold text-white tracking-tight">Total Paid (<%= order.paymentMethod %>)</span>
-                        <span class="text-[20px] font-black text-[#FF6B00] leading-none tracking-tight">₹<%= order.finalAmount || order.totalAmount %></span>
+                        <span class="text-[13px] font-bold text-white tracking-tight">Total Paid (All Orders)</span>
+                        <span class="text-[20px] font-black text-[#FF6B00] leading-none tracking-tight">₹<%= combinedFinal %></span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- DIGITAL RECEIPT & RATING (Shows when served) -->
-        <% if (order.orderStatus === 'Served') { %>
+        <!-- DIGITAL RECEIPT & RATING (Shows only when ALL orders are served) -->
+        <% if (isAllServed) { %>
             <div class="text-center mb-6 animate-fade-in" style="animation-delay: 0.3s;">
                 <div class="text-[40px] mb-2 inline-block animate-bounce" style="animation-duration: 2s;">🎉</div>
                 <h2 class="text-[22px] font-black tracking-tight mb-5">Enjoy your meal!</h2>
                 
                 <div class="bg-gradient-primary rounded-[2rem] p-6 shadow-[0_15px_30px_rgba(255,107,0,0.3)] text-center text-white border border-orange-400/30">
+
+                    <!-- Full Receipt Button (When Served) -->
                     <a href="/receipt/<%= order._id %>" target="_blank" onclick="if(navigator.vibrate) navigator.vibrate(15)" class="inline-flex items-center justify-center gap-2 bg-white text-[#FF6B00] font-extrabold text-[13px] py-3.5 px-6 rounded-xl shadow-md active:scale-95 transition-transform uppercase tracking-wider mb-6 w-full">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Download Receipt
@@ -169,7 +193,7 @@
         
         <!-- Refresh Button -->
         <button onclick="if(navigator.vibrate) navigator.vibrate(15); window.location.reload()" class="mt-6 w-full bg-[#11141E] hover:bg-[#161A26] active:scale-[0.98] border border-white/[0.04] text-white font-bold text-[13px] py-3.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 animate-fade-in uppercase tracking-wider" style="animation-delay: 0.4s;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
             Refresh Status
         </button>
     </main>
@@ -192,35 +216,44 @@
                 statusEl.className = "text-[32px] font-black text-emerald-400 leading-none tracking-tight relative z-10 animate-bounce pb-1 drop-shadow-md";
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200]); 
             } else if (newStatus === 'Served') {
-                window.location.reload(); // Reload to show the receipt UI!
+                window.location.reload(); 
+            } else {
+                statusEl.className = "text-[32px] font-black text-[#FF6B00] leading-none tracking-tight relative z-10 animate-pulse pb-1 drop-shadow-md";
             }
         });
 
-        // --- 2-MINUTE TIMER LOGIC ---
-        const createdAt = new Date('<%= order.createdAt %>').getTime();
+        // --- BULLETPROOF TIMER LOGIC ---
+        let remainingSeconds = <%= remainingSeconds %>;
         const timerDisplay = document.getElementById('timerDisplay');
         const editOrderBtn = document.getElementById('editOrderBtn');
-        let isExpired = false;
+        const orderMoreBtn = document.getElementById('orderMoreBtn');
+        const earlyReceiptBtn = document.getElementById('earlyReceiptBtn');
 
-        if (timerDisplay) {
+        if (timerDisplay && remainingSeconds > 0) {
             const interval = setInterval(() => {
-                const now = new Date().getTime();
-                const diff = now - createdAt;
-                const timeLeft = (2 * 60 * 1000) - diff; // 2 minutes
+                remainingSeconds--;
 
-                if (timeLeft <= 0) {
+                if (remainingSeconds <= 0) {
                     clearInterval(interval);
                     timerDisplay.innerText = "00:00";
-                    timerDisplay.className = "font-mono text-lg font-black text-red-500 bg-red-500/10 px-3 py-1.5 rounded-xl border border-red-500/20 transition-colors shadow-inner";
+                    timerDisplay.className = "font-mono text-lg font-black text-red-500 bg-red-500/10 px-3 py-1.5 rounded-xl border border-red-500/20 shadow-inner transition-colors";
                     
+                    // The Magic UI Swap!
                     if(editOrderBtn) {
-                        editOrderBtn.classList.add('opacity-40');
-                        editOrderBtn.classList.remove('hover:bg-white/5');
+                        editOrderBtn.classList.add('hidden');
+                        editOrderBtn.classList.remove('flex');
                     }
-                    isExpired = true;
+                    if(orderMoreBtn) {
+                        orderMoreBtn.classList.add('hidden');
+                        orderMoreBtn.classList.remove('flex');
+                    }
+                    if(earlyReceiptBtn) {
+                        earlyReceiptBtn.classList.remove('hidden');
+                        earlyReceiptBtn.classList.add('flex');
+                    }
                 } else {
-                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    const minutes = Math.floor(remainingSeconds / 60);
+                    const seconds = remainingSeconds % 60;
                     timerDisplay.innerText = `0${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
                 }
             }, 1000);
@@ -228,11 +261,7 @@
 
         // Edit Warning Modal
         function handleEditClick() {
-            if (isExpired) {
-                alert("⏳ The 2-minute window has passed.\n\nYour food is already being prepared. Please contact the manager at the counter to request any changes.");
-            } else {
-                alert("✅ You are within the 2-minute window!\n\nPlease quickly call the waiter or go to the counter to update your items, as your payment has already been processed.");
-            }
+            alert("✅ You are within the 2-minute window!\n\nPlease quickly call the waiter or go to the counter to update your items, as your payment has already been processed.");
         }
     </script>
 </body>

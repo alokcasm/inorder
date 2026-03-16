@@ -25,13 +25,14 @@ exports.getMenu = async (req, res) => {
         });
 
         if (activeOrder) {
-            // Check if THIS user placed the order
-            if (req.session.activeOrderId && req.session.activeOrderId === activeOrder._id.toString()) {
-                // If they clicked "Order More Food", let them see the menu!
+            // NEW: Check if this active order exists in the user's array of orders!
+            if (req.session.orderIds && req.session.orderIds.includes(activeOrder._id.toString())) {
                 if (req.query.addMore === 'true') {
-                    // Allow them to pass through
+                    // Let them order more food!
                 } else {
-                    return res.redirect(`/track/${activeOrder._id}`);
+                    // Redirect to the newest order tracking page
+                    const latestId = req.session.orderIds[req.session.orderIds.length - 1];
+                    return res.redirect(`/track/${latestId}`);
                 }
             } else {
                 return res.render('customer/occupied', { tableNumber: table.tableNumber, shopName: table.vendorId.shopName });
@@ -42,17 +43,15 @@ exports.getMenu = async (req, res) => {
             return res.render('customer/welcome', { table, vendor: table.vendorId });
         }
 
-        const items = await Item.find({ vendorId: table.vendorId._id, isAvailable: true }).sort({ orderCount: -1 });
+        const items = await Item.find({ vendorId: table.vendorId._id }).sort({ orderCount: -1 });
         if (!req.session.cart) req.session.cart = [];
 
-        res.render('customer/menu', { 
-            table, vendor: table.vendorId, items, 
-            cart: req.session.cart, customerName: req.session.customerName 
-        });
+        res.render('customer/menu', { table, vendor: table.vendorId, items, cart: req.session.cart, customerName: req.session.customerName });
     } catch (error) {
         console.error(error); res.status(500).send('Server Error');
     }
 };
+
 
 // 2. Add Item to Cart (API Endpoint)
 exports.addToCart = (req, res) => {
@@ -162,15 +161,36 @@ exports.placeOrder = async (req, res) => {
 exports.trackOrder = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        const order = await Order.findById(orderId).populate('vendorId');
-        
-        if (!order) return res.status(404).send('Order not found');
+        const latestOrder = await Order.findById(orderId).populate('vendorId');
+        if (!latestOrder) return res.status(404).send('Order not found');
 
-        // We need to fetch the Table ID so they can "Order More Food"
+        const idsToFetch = (req.session.orderIds && req.session.orderIds.length > 0) ? req.session.orderIds : [orderId];
+        const allOrders = await Order.find({ _id: { $in: idsToFetch } }).sort({ createdAt: 1 }); // Oldest first
+
+        let combinedItems = [];
+        let combinedSubTotal = 0;
+        let combinedDiscount = 0;
+        let combinedFinal = 0;
+        let isAllServed = true;
+
+        allOrders.forEach(o => {
+            combinedItems.push(...o.items);
+            combinedSubTotal += o.totalAmount;
+            combinedDiscount += (o.discountApplied || 0);
+            combinedFinal += (o.finalAmount || o.totalAmount);
+            if (o.orderStatus !== 'Served') isAllServed = false;
+        });
+
         const TableModel = require('../models/Table');
-        const table = await TableModel.findOne({ vendorId: order.vendorId._id, tableNumber: order.tableNumber });
+        const table = await TableModel.findOne({ vendorId: latestOrder.vendorId._id, tableNumber: latestOrder.tableNumber });
 
-        res.render('customer/track', { order, vendor: order.vendorId, tableId: table._id });
+        res.render('customer/track', { 
+            order: latestOrder, 
+            vendor: latestOrder.vendorId, 
+            tableId: table._id,
+            firstOrderTime: allOrders[0].createdAt, // 🚨 NEW: Pass the exact time of the FIRST order
+            combinedItems, combinedSubTotal, combinedDiscount, combinedFinal, isAllServed
+        });
     } catch (error) {
         console.error(error); res.status(500).send('Server Error');
     }
@@ -180,45 +200,35 @@ exports.trackOrder = async (req, res) => {
 exports.verifyPayment = async (req, res) => {
     try {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature, dbOrderId } = req.body;
-
-        // Verify Signature to ensure payment is legit
+        const crypto = require('crypto');
         const body = razorpay_order_id + "|" + razorpay_payment_id;
-        const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-                                        .update(body.toString())
-                                        .digest('hex');
+        const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
 
         if (expectedSignature === razorpay_signature) {
             
-            // Payment Successful! Send to kitchen
+            // 🚨 THE FIX: Add "createdAt: new Date()" 
+            // This resets the clock so the 2-minute timer starts EXACTLY when payment succeeds!
             const updatedOrder = await Order.findByIdAndUpdate(dbOrderId, { 
-                paymentStatus: 'Paid',
-                orderStatus: 'Pending' 
+                paymentStatus: 'Paid', 
+                orderStatus: 'Pending',
+                createdAt: new Date() // <--- Reset the timer here!
             }, { new: true });
             
-            // 🚨 REAL TRACKING LOGIC: Increase the order count for every item bought!
             for (let cartItem of req.session.cart) {
-                await Item.findByIdAndUpdate(cartItem.itemId, { 
-                    $inc: { orderCount: cartItem.quantity } 
-                });
+                await Item.findByIdAndUpdate(cartItem.itemId, { $inc: { orderCount: cartItem.quantity } });
             }
-
-            // Clear customer cart
             req.session.cart = [];
-            req.session.activeOrderId = updatedOrder._id.toString();
 
-            // Alert the Kitchen
+            if (!req.session.orderIds) req.session.orderIds = [];
+            req.session.orderIds.push(updatedOrder._id.toString());
+
             req.io.to(updatedOrder.vendorId.toString()).emit('newOrder', updatedOrder);
-
-            // Alert the Kitchen
-            req.io.to(updatedOrder.vendorId.toString()).emit('newOrder', updatedOrder);
-
             res.json({ success: true, redirectUrl: `/track/${dbOrderId}` });
         } else {
             res.status(400).json({ success: false, error: 'Invalid Signature' });
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Server Error' });
+        console.error(error); res.status(500).json({ error: 'Server Error' });
     }
 };
 
@@ -238,14 +248,35 @@ exports.submitRating = async (req, res) => {
 exports.getReceipt = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        const order = await Order.findById(orderId).populate('vendorId');
         
-        if (!order) return res.status(404).send('Order not found');
+        // Fetch combined data for receipt
+        const idsToFetch = (req.session.orderIds && req.session.orderIds.length > 0) ? req.session.orderIds : [orderId];
+        const allOrders = await Order.find({ _id: { $in: idsToFetch } }).populate('vendorId');
+        if (!allOrders.length) return res.status(404).send('Order not found');
 
-        res.render('customer/receipt', { order, vendor: order.vendorId });
+        const vendor = allOrders[0].vendorId;
+        const tableNumber = allOrders[0].tableNumber;
+        const paymentMethod = allOrders[allOrders.length-1].paymentMethod;
+
+        let combinedItems = [];
+        let combinedSubTotal = 0;
+        let combinedDiscount = 0;
+        let combinedFinal = 0;
+
+        allOrders.forEach(o => {
+            combinedItems.push(...o.items);
+            combinedSubTotal += o.totalAmount;
+            combinedDiscount += (o.discountApplied || 0);
+            combinedFinal += (o.finalAmount || o.totalAmount);
+        });
+
+        res.render('customer/receipt', { 
+            latestOrderId: orderId, vendor, tableNumber, paymentMethod,
+            combinedItems, combinedSubTotal, combinedDiscount, combinedFinal,
+            date: allOrders[0].createdAt // Date of first order
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
+        console.error(error); res.status(500).send('Server Error');
     }
 };
 
