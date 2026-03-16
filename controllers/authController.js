@@ -36,12 +36,29 @@ exports.sendOtp = async (req, res) => {
             return res.render('auth/register', { error: 'Phone or Email already registered' });
         }
 
-        // Generate OTP
-        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+// Generate OTP
+const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-        console.log(`\n========================================`);
-        console.log(`📱 OTP for ${shopName} (${phone}) is: ${otp}`);
-        console.log(`========================================\n`);
+// Email options
+const mailOptions = {
+            from: `"inOrder Platform" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Verify your inOrder Vendor Account',
+            html: `
+                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+                    <h2>Welcome to inOrder, ${name}! 🍽️</h2>
+                    <p>You are setting up an account for <b>${shopName}</b>.</p>
+                    <p>Your verification code is:</p>
+                    <h1 style="font-size: 40px; letter-spacing: 5px; color: #FF6B00;">${otp}</h1>
+                    <p>Enter this code to complete your registration. Do not share this code with anyone.</p>
+                </div>
+            `
+        };
+
+// Send email
+await transporter.sendMail(mailOptions);
+
+console.log("✅ OTP Email sent successfully");
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
